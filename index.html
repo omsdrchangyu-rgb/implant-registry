@@ -451,16 +451,25 @@ window.REG_CONFIG = {
   function setLoading(text) {
     document.getElementById("app").innerHTML = `<p class="empty">${esc(text)}</p>`;
   }
-  async function load(keepView) {
-    if (!keepView) setLoading("讀取資料中…");
-    const out = await call("load");
+  /* 上次的資料先存在這支手機，打開時立刻顯示，背景再向伺服器要最新的 */
+  const DKEY = "reg_data";
+  let lastJSON = "";
+  function apply(out) {
     Object.keys(out.data).forEach(k => { DATA[k] = out.data[k]; });
     LAYOUTS.length = 0; out.layouts.forEach(l => LAYOUTS.push(l));
     TOUCHED.clear();
     USER = out.me.name;
     shell(true);
     derive();
-    render();
+    if (!document.querySelector(".sheet")) render();
+  }
+  async function load(keepView) {
+    const cached = ls.get(DKEY);
+    if (cached && !lastJSON) { try { apply(JSON.parse(cached)); lastJSON = cached; keepView = true; } catch (e) {} }
+    if (!keepView) setLoading("讀取資料中…");
+    const out = await call("load");
+    const s = JSON.stringify({ me: out.me, data: out.data, layouts: out.layouts });
+    if (s !== lastJSON) { lastJSON = s; ls.set(DKEY, s); apply(out); }
     if (view.patient) ensurePhotos(view.patient, "i", true);
     if (view.tab === "other" && view.other) ensurePhotos(view.other, "o", true);
   }
@@ -475,14 +484,22 @@ window.REG_CONFIG = {
 
   /* ---------- photos ---------- */
   const loaded = {};
+  function setPhotos(name, scope, list) {
+    for (let i = PHOTOS.length - 1; i >= 0; i--) if (PHOTOS[i].姓名 === name && (PHOTOS[i].範圍 || "i") === scope) PHOTOS.splice(i, 1);
+    list.forEach(p => PHOTOS.push(p));
+  }
   async function ensurePhotos(name, scope, force) {
     const k = scope + "|" + name;
     if (!name || (loaded[k] && !force)) return;
     loaded[k] = true;
+    const ck = "reg_ph_" + k, prev = ls.get(ck);
+    if (prev && !force) { try { setPhotos(name, scope, JSON.parse(prev)); if (!document.querySelector(".sheet")) render(); } catch (e) {} }
     try {
       const out = await call("photos", { name, scope });
-      for (let i = PHOTOS.length - 1; i >= 0; i--) if (PHOTOS[i].姓名 === name && (PHOTOS[i].範圍 || "i") === scope) PHOTOS.splice(i, 1);
-      out.photos.forEach(p => PHOTOS.push(p));
+      const s = JSON.stringify(out.photos);
+      if (s === prev && !force) return;
+      ls.set(ck, s);
+      setPhotos(name, scope, out.photos);
       if (!document.querySelector(".sheet")) render();
     } catch (err) { loaded[k] = false; if (err.message !== "AUTH") toast("照片清單讀取失敗：" + err.message); }
   }
@@ -506,20 +523,23 @@ window.REG_CONFIG = {
       if (el.tagName === "IMG") el.src = URLS[id]; else el.style.backgroundImage = `url(${URLS[id]})`;
     });
   }
-  async function fetchOne(id) {
-    let blob = await fromCache(id);
-    if (!blob) {
-      const out = await call("photo", { id });
-      blob = b64Blob(out.data, out.mime);
-      toCache(id, blob);
-    }
-    URLS[id] = URL.createObjectURL(blob);
-    paint(id);
+  function show(id, blob) { URLS[id] = URL.createObjectURL(blob); paint(id); }
+  /* 先看手機裡有沒有存過；沒有的話，一次向伺服器要最多 6 張 */
+  async function fetchBatch(ids) {
+    const need = [];
+    for (const id of ids) { const b = await fromCache(id); if (b) show(id, b); else need.push(id); }
+    if (!need.length) return;
+    const out = await call("photoBatch", { ids: need });
+    need.forEach(id => {
+      const r = out.photos[id];
+      if (!r || r.error) { PENDING[id] = "failed"; return; }
+      const blob = b64Blob(r.data, r.mime); toCache(id, blob); show(id, blob);
+    });
   }
   function pump() {
-    while (active < 4 && QUEUE.length) {
-      const id = QUEUE.shift(); active++;
-      fetchOne(id).catch(() => { PENDING[id] = "failed"; }).finally(() => { active--; pump(); });
+    while (active < 3 && QUEUE.length) {
+      const ids = QUEUE.splice(0, 6); active++;
+      fetchBatch(ids).catch(() => { ids.forEach(id => { if (!URLS[id]) PENDING[id] = "failed"; }); }).finally(() => { active--; pump(); });
     }
   }
   function photoSrc(id) {
@@ -552,7 +572,8 @@ window.REG_CONFIG = {
 
   async function logout() {
     try { await call("logout"); } catch (e) {}
-    session = null; ls.del(SKEY);
+    session = null; ls.del(SKEY); ls.del(DKEY); lastJSON = "";
+    try { Object.keys(localStorage).filter(k => k.indexOf("reg_ph_") === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {}
     try { google.accounts.id.disableAutoSelect(); } catch (e) {}
     showLogin("已登出。");
   }
@@ -563,7 +584,7 @@ window.REG_CONFIG = {
       document.getElementById("app").innerHTML = `<div class="login"><h2>還沒設定完成</h2><p>請在 index.html 最上面填入 API_URL（Apps Script 網址）和 CLIENT_ID。</p></div>`;
       return;
     }
-    if (session) load().catch(err => { if (err.message !== "AUTH") setLoading("讀取失敗：" + err.message); });
+    if (session) load().catch(err => { if (err.message === "AUTH") return; if (lastJSON) toast("目前顯示的是上次的資料（" + err.message + "）"); else setLoading("讀取失敗：" + err.message); });
     else showLogin();
   }
 
