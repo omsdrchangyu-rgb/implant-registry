@@ -269,7 +269,9 @@ path { stroke-linejoin: round; stroke-linecap: round; }
 .editing .fr.sel { outline: 3px solid var(--orange); outline-offset: -3px; }
 .fr .fn { position: absolute; left: 6px; bottom: 4px; font-size: 10px; color: rgba(255,255,255,.75); text-shadow: 0 1px 2px rgba(0,0,0,.8); pointer-events: none; }
 .caption { font-size: 13px; color: var(--muted); }
-.ba-stage { position: relative; width: 100%; max-width: 100%; overflow: hidden; border-radius: 8px; background: #0B0D0E; touch-action: pan-y; cursor: ew-resize; user-select: none; }
+.ba-stage { position: relative; width: 100%; max-width: 100%; overflow: hidden; border-radius: 8px; background: #0B0D0E; touch-action: pan-y; cursor: ew-resize; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.ba-stage img, .pgrid img, .fr img { -webkit-user-drag: none; user-select: none; -webkit-user-select: none; pointer-events: none; }
+.ba-stage ::selection, .ba-stage::selection { background: transparent; }
 .editing .ba-stage { touch-action: none; cursor: grab; }
 .ba-layer { position: absolute; inset: 0; overflow: hidden; }
 .ba-div { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; transform: translateX(-1px); box-shadow: 0 0 10px rgba(0,0,0,.45); pointer-events: none; }
@@ -1767,6 +1769,7 @@ function openLightbox(id) {
 
 /* drag: compare divider (view) and pan (editor) */
 let drag = null;
+document.addEventListener("dragstart", e => { if (e.target.closest(".ba-stage, .pgrid, .fr")) e.preventDefault(); });
 document.addEventListener("pointerdown", e => {
   const stage = e.target.closest(".ba-stage"), fr = e.target.closest(".fr");
   const inEd = !!e.target.closest(".editing");
@@ -1783,6 +1786,7 @@ document.addEventListener("pointerdown", e => {
   if (stage && !inEd) {
     const b = RENDERED[stage.dataset.bi]; if (!b) return;
     drag = { mode: "div", stage, box: stage.getBoundingClientRect(), b };
+    e.preventDefault(); try { window.getSelection().removeAllRanges(); } catch (er) {}
     moveDiv(e.clientX); stage.setPointerCapture(e.pointerId);
   }
 });
