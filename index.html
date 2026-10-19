@@ -9,6 +9,9 @@
 <meta name="apple-mobile-web-app-title" content="植牙病例">
 <meta name="theme-color" content="#3A4B54">
 <title>立馥植牙病例</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
 <style>:root{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,7 +56,7 @@
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.6; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--head-bg); }
-.wrap { max-width: 720px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 button, input, select, textarea { font: inherit; color: inherit; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, .fr:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 
@@ -90,6 +93,74 @@ main { padding-block: 18px 72px; display: flex; flex-direction: column; gap: 16p
 .btn.sm { padding: 2px 10px; font-size: 12.5px; }
 .btn.ghost { border-color: transparent; background: transparent; color: var(--navy); padding-inline: 6px; }
 .list { display: flex; flex-direction: column; gap: 10px; }
+.list.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.card.pc { display: flex; flex-direction: column; padding: 0; overflow: hidden; gap: 0; }
+.card.pc .cthumb { aspect-ratio: 16 / 10; background: var(--panel) center / cover no-repeat; display: grid; place-items: center; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--hair); }
+.card.pc .cthumb svg { opacity: .5; }
+.card.pc .cbody { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.card.pc .row1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.card.pc .name { font-size: 19px; }
+.card.pc .sub { font-size: 13px; }
+.card.pc .dots { margin: 2px 0; max-width: 100%; }
+.tag { display: inline-flex; align-items: center; font-size: 13.5px; font-weight: 700; padding: 2px 10px; border-radius: 7px; border: 1.5px solid var(--tg); background: var(--tgb); color: var(--tgi); white-space: nowrap; line-height: 1.4; }
+.tag.sm { font-size: 12px; padding: 0 7px; border-width: 1px; }
+.tg-single { --tg: var(--navy); --tgb: var(--panel); --tgi: var(--navy); }
+.tg-partial { --tg: var(--plan); --tgb: var(--plan-tint); --tgi: var(--plan); }
+.tg-allx { --tg: var(--orange); --tgb: var(--wash); --tgi: var(--orange-deep); }
+.tg-re { --tg: var(--signal); --tgb: var(--wash); --tgi: var(--signal); }
+.tg-other { --tg: var(--ok); --tgb: var(--ok-tint); --tgi: var(--ok); }
+@media (max-width: 640px) {
+  .list.cards { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .card.pc { flex-direction: row; }
+  .card.pc .cthumb { width: 112px; flex: none; aspect-ratio: auto; border-bottom: 0; border-right: 1px solid var(--hair); }
+  .card.pc .cbody { padding: 10px 12px; }
+}
+#modal:empty { display: none; }
+.mscrim { position: fixed; inset: 0; z-index: 15; background: var(--scrim); display: flex; align-items: flex-start; justify-content: center; padding: calc(24px + env(safe-area-inset-top, 0px)) 16px 24px; }
+.modal { background: var(--bg); width: 100%; max-width: 860px; max-height: 100%; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 18px 60px rgba(0,0,0,.35); }
+.mhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--hair); background: var(--card); }
+.mhead b { font-family: var(--serif); font-size: 16px; }
+.mbody { overflow-y: auto; padding: 16px 20px 40px; display: flex; flex-direction: column; gap: 16px; overscroll-behavior: contain; }
+@media (max-width: 640px) {
+  .mscrim { padding: 0; }
+  .modal { border-radius: 0; height: 100%; }
+  .mhead { padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
+  .mbody { padding: 14px max(14px, env(safe-area-inset-left, 0px)) calc(40px + env(safe-area-inset-bottom, 0px)); }
+}
+.lib { display: flex; flex-direction: column; gap: 10px; }
+.lib summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; list-style: none; }
+.lib summary::-webkit-details-marker { display: none; }
+.lib summary h3 { margin: 0; }
+.libbar { position: sticky; top: -16px; z-index: 2; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.libbar select { max-width: 100%; min-width: 0; flex: 1 1 200px; }
+.thumb .use { position: absolute; left: 4px; bottom: 4px; background: rgba(0,0,0,.6); color: #fff; font-size: 10.5px; border-radius: 5px; padding: 0 5px; }
+.thumb .star { position: absolute; right: 4px; top: 4px; background: var(--orange); color: #fff; font-size: 10.5px; border-radius: 5px; padding: 0 5px; }
+.prog { height: 8px; border-radius: 5px; background: var(--panel); overflow: hidden; }
+.prog i { display: block; height: 100%; width: 0; background: var(--orange); transition: width .2s; }
+.uprow { display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; }
+.uprow .im { width: 56px; height: 56px; border-radius: 8px; background: var(--panel) center / cover no-repeat; }
+.uprow input, .uprow select { min-width: 0; width: 100%; }
+.uprow.done .im { outline: 2px solid var(--ok); }
+.uprow.err .im { outline: 2px solid var(--signal); }
+.mchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mchips .chip[disabled] { opacity: .55; cursor: default; }
+.chart-m { overflow-x: auto; }
+.chart-m svg text { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
+.chart-m .bar { cursor: pointer; }
+.mleg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
+.mleg i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.mlist { display: flex; flex-direction: column; border: 1px solid var(--hair); border-radius: 10px; overflow: hidden; }
+.mlist button { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 10px; text-align: left; border: 0; border-top: 1px solid var(--hair); background: var(--card); padding: 8px 12px; cursor: pointer; font-size: 13.5px; align-items: center; }
+.mlist button:first-child { border-top: 0; }
+.rv { display: flex; flex-direction: column; gap: 10px; }
+.rvi { background: var(--card); border: 1px solid var(--hair); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.rvi .h { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 13px; color: var(--muted); }
+.rvi .h b { color: var(--ink); font-family: var(--serif); font-size: 15px; cursor: pointer; }
+.rvi .h b:hover { text-decoration: underline; }
+.rvi p { margin: 0; white-space: pre-wrap; }
+.rvf { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rvf select, .rvf input { min-width: 0; }
+.rvf select { font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); }
 .card { background: var(--card); border: 1px solid var(--hair); border-radius: 12px; padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; cursor: pointer; text-align: left; width: 100%; }
 .card:hover { border-color: var(--navy); }
 .card .name { font-family: var(--serif); font-size: 17px; min-width: 0; }
@@ -384,6 +455,7 @@ details.filters summary::-webkit-details-marker { display: none; }
   </div>
 </header>
 <div class="wrap"><main id="app"></main></div>
+<div id="modal"></div>
 <div id="layer"></div>
 
 <script>
@@ -572,16 +644,38 @@ window.REG_CONFIG = {
     return await new Promise(ok => cv.toBlob(ok, "image/jpeg", 0.88));
   }
   const blobB64 = blob => new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = bad; r.readAsDataURL(blob); });
-  async function upload(name, scope, files, base, progress) {
-    const added = [];
-    for (let i = 0; i < files.length; i++) {
-      progress && progress(i + 1, files.length);
-      const blob = await resize(files[i], 2400);
-      const out = await call("upload", { name, scope, filename: base + (files.length > 1 ? "_" + (i + 1) : "") + ".jpg", mime: "image/jpeg", data: await blobB64(blob) });
-      URLS[out.photo.id] = URL.createObjectURL(blob); toCache(out.photo.id, blob);
-      added.push(out.photo);
+  /* 用 XHR 上傳才看得到進度；一次傳兩張 */
+  function postWithProgress(body, onProg) {
+    return new Promise((ok, bad) => {
+      const x = new XMLHttpRequest();
+      x.open("POST", CFG.API_URL);
+      x.upload.onprogress = e => { if (e.lengthComputable) onProg(e.loaded / e.total); };
+      x.onload = () => { try { const out = JSON.parse(x.responseText); if (!out.ok) { if (out.error === "AUTH") { session = null; ls.del(SKEY); showLogin("登入已過期，請重新登入。"); } bad(new Error(out.error || "上傳失敗")); } else ok(out); } catch (e) { bad(new Error("伺服器回應錯誤")); } };
+      x.onerror = () => bad(new Error("網路中斷"));
+      x.send(body);
+    });
+  }
+  async function upload(name, scope, items, progress, onItem) {
+    const n = items.length, frac = new Array(n).fill(0), res = new Array(n).fill(null), seen = {};
+    let done = 0, next = 0;
+    const tick = () => progress && progress(frac.reduce((a, b) => a + b, 0) / n, done, n);
+    const nameFor = base => { seen[base] = (seen[base] || 0) + 1; return base + (seen[base] > 1 ? "_" + seen[base] : "") + ".jpg"; };
+    const names = items.map(it => nameFor(it.base));
+    async function one(i) {
+      try {
+        const blob = await resize(items[i].file, 2400);
+        frac[i] = 0.1; tick();
+        const body = JSON.stringify({ action: "upload", session, name, scope, filename: names[i], mime: "image/jpeg", data: await blobB64(blob) });
+        const out = await postWithProgress(body, f => { frac[i] = 0.1 + f * 0.8; tick(); });
+        URLS[out.photo.id] = URL.createObjectURL(blob); toCache(out.photo.id, blob);
+        res[i] = out.photo; onItem && onItem(i, true);
+      } catch (e) { onItem && onItem(i, false); }
+      frac[i] = 1; done++; tick();
     }
-    return added;
+    async function worker() { while (next < n) { const i = next++; await one(i); } }
+    tick();
+    await Promise.all([worker(), worker()]);
+    return res;
   }
 
   async function logout() {
@@ -606,10 +700,13 @@ window.REG_CONFIG = {
 })();
 </script>
 <script>
-const DATA = {"doctors": [], "eventTypes": [], "patients": [], "implants": [], "temps": [], "finals": [], "events": [], "plans": [], "planSites": [], "others": [], "oplans": [], "oevents": []};
+const DATA = {"doctors": [], "eventTypes": [], "patients": [], "implants": [], "temps": [], "finals": [], "events": [], "plans": [], "planSites": [], "others": [], "oplans": [], "oevents": [], "opatients": [], "photoinfo": []};
 const TEETH = {"U1":{"w":8.5,"h":10.5,"c":"M-3.5 0.0 C-3.6 0.6 -4.0 2.4 -4.1 3.5 C-4.2 4.6 -4.3 5.7 -4.2 6.6 C-4.2 7.5 -4.2 8.5 -4.0 9.1 C-3.7 9.7 -3.6 10.1 -2.9 10.3 C-2.2 10.5 -1.0 10.5 0.0 10.5 C1.0 10.5 2.3 10.6 3.0 10.5 C3.7 10.4 3.8 10.4 4.0 10.2 C4.3 9.9 4.2 9.4 4.2 9.0 C4.3 8.6 4.2 8.4 4.2 7.6 C4.2 6.8 4.1 5.3 4.0 4.0 C3.8 2.7 3.6 0.7 3.5 0.0 Q0.0 -2.0 -3.5 0.0 Z","r":"M3.5 0.0 C3.4 -0.7 3.3 -2.5 3.1 -4.0 C2.9 -5.5 2.6 -7.6 2.2 -9.0 C1.9 -10.4 1.4 -11.6 1.0 -12.3 C0.6 -13.0 0.2 -13.0 -0.2 -13.0 C-0.6 -13.0 -1.0 -12.9 -1.3 -12.2 C-1.6 -11.5 -2.0 -10.4 -2.3 -9.0 C-2.6 -7.6 -2.9 -5.5 -3.1 -4.0 C-3.3 -2.5 -3.4 -0.7 -3.5 0.0 Z","p":"","g":""},"U2":{"w":6.5,"h":9,"c":"M-2.5 0.0 C-2.6 0.5 -2.9 2.1 -3.0 3.0 C-3.2 3.9 -3.3 4.5 -3.2 5.2 C-3.2 6.0 -3.2 6.9 -3.0 7.5 C-2.7 8.1 -2.4 8.4 -1.9 8.7 C-1.4 8.9 -0.4 9.0 0.2 9.0 C0.8 9.0 1.4 9.0 1.9 8.9 C2.4 8.9 2.7 8.7 3.0 8.4 C3.2 8.2 3.2 8.0 3.2 7.3 C3.3 6.6 3.2 5.2 3.1 4.0 C3.0 2.8 2.6 0.7 2.5 0.0 Q0.0 -1.8 -2.5 0.0 Z","r":"M2.5 0.0 C2.4 -0.7 2.3 -2.5 2.1 -4.0 C2.0 -5.5 1.8 -7.6 1.5 -9.0 C1.2 -10.4 0.9 -11.5 0.5 -12.2 C0.1 -12.9 -0.3 -13.0 -0.6 -13.0 C-0.9 -13.0 -1.2 -12.7 -1.4 -12.0 C-1.6 -11.3 -1.8 -10.3 -1.9 -9.0 C-2.0 -7.7 -2.2 -5.5 -2.3 -4.0 C-2.4 -2.5 -2.5 -0.7 -2.5 0.0 Z","p":"","g":""},"U3":{"w":7.5,"h":10,"c":"M-2.8 0.0 C-2.9 0.5 -3.3 2.2 -3.5 3.0 C-3.6 3.8 -3.8 4.3 -3.8 5.0 C-3.7 5.7 -3.6 6.3 -3.3 6.9 C-3.0 7.5 -2.4 8.1 -2.0 8.5 C-1.6 8.9 -1.2 9.3 -0.8 9.5 C-0.4 9.7 -0.1 9.9 0.3 9.9 C0.7 9.9 0.9 9.7 1.3 9.4 C1.7 9.2 2.2 8.7 2.6 8.3 C3.0 7.9 3.4 7.4 3.5 7.0 C3.7 6.6 3.8 6.6 3.8 5.9 C3.7 5.2 3.6 4.0 3.4 3.0 C3.2 2.0 2.9 0.5 2.8 0.0 Q0.0 -2.0 -2.8 0.0 Z","r":"M2.8 0.0 C2.7 -0.8 2.6 -3.2 2.5 -5.0 C2.4 -6.8 2.2 -9.2 1.9 -11.0 C1.6 -12.8 1.2 -14.6 0.9 -15.6 C0.6 -16.6 0.2 -17.0 -0.2 -17.0 C-0.6 -17.0 -0.9 -16.8 -1.2 -15.8 C-1.5 -14.8 -1.8 -12.8 -2.0 -11.0 C-2.2 -9.2 -2.4 -6.8 -2.5 -5.0 C-2.7 -3.2 -2.7 -0.8 -2.8 0.0 Z","p":"","g":""},"U4":{"w":7.4,"h":8.5,"c":"M-2.6 0.0 C-2.7 0.4 -3.2 1.7 -3.4 2.4 C-3.6 3.1 -3.7 3.6 -3.7 4.2 C-3.7 4.8 -3.6 5.4 -3.3 5.9 C-3.0 6.4 -2.3 7.0 -1.9 7.4 C-1.4 7.8 -0.9 8.1 -0.6 8.2 C-0.3 8.4 -0.1 8.5 0.1 8.5 C0.3 8.5 0.4 8.5 0.8 8.3 C1.2 8.1 1.9 7.6 2.3 7.2 C2.7 6.8 3.2 6.2 3.4 5.7 C3.6 5.2 3.7 5.1 3.7 4.5 C3.7 3.9 3.6 3.0 3.4 2.3 C3.2 1.5 2.7 0.4 2.6 0.0 Q0.0 -1.2 -2.6 0.0 Z","r":"M2.6 0.0 C2.5 -0.7 2.4 -2.5 2.3 -4.0 C2.1 -5.5 1.9 -7.5 1.7 -9.0 C1.4 -10.5 1.1 -12.2 0.8 -13.0 C0.5 -13.8 0.2 -14.0 -0.1 -14.0 C-0.4 -14.0 -0.6 -13.8 -0.9 -13.0 C-1.2 -12.2 -1.5 -10.5 -1.7 -9.0 C-1.9 -7.5 -2.2 -5.5 -2.4 -4.0 C-2.5 -2.5 -2.6 -0.7 -2.6 0.0 Z","p":"","g":""},"U5":{"w":7.2,"h":8.2,"c":"M-2.6 0.0 C-2.7 0.4 -3.2 1.7 -3.4 2.4 C-3.5 3.1 -3.6 3.7 -3.6 4.3 C-3.6 4.9 -3.5 5.5 -3.2 6.0 C-3.0 6.5 -2.4 7.1 -1.9 7.4 C-1.4 7.8 -0.6 8.1 0.0 8.1 C0.6 8.1 1.4 7.8 1.9 7.4 C2.4 7.1 3.0 6.5 3.2 6.0 C3.5 5.5 3.6 4.9 3.6 4.3 C3.6 3.7 3.5 3.1 3.4 2.4 C3.2 1.7 2.7 0.4 2.6 0.0 Q0.0 -1.2 -2.6 0.0 Z","r":"M2.6 0.0 C2.5 -0.7 2.4 -2.5 2.3 -4.0 C2.1 -5.5 1.9 -7.5 1.7 -9.0 C1.4 -10.5 1.1 -12.2 0.8 -13.0 C0.5 -13.8 0.2 -14.0 -0.1 -14.0 C-0.4 -14.0 -0.6 -13.8 -0.9 -13.0 C-1.2 -12.2 -1.5 -10.5 -1.7 -9.0 C-1.9 -7.5 -2.2 -5.5 -2.4 -4.0 C-2.5 -2.5 -2.6 -0.7 -2.6 0.0 Z","p":"","g":""},"U6":{"w":10,"h":7.4,"c":"M-4.0 0.0 C-4.1 0.4 -4.6 1.5 -4.8 2.2 C-5.0 2.9 -5.0 3.4 -5.0 4.0 C-5.0 4.6 -4.8 5.3 -4.6 5.8 C-4.4 6.2 -3.9 6.5 -3.6 6.7 C-3.3 6.9 -3.0 7.0 -2.6 7.0 C-2.2 7.0 -1.9 6.8 -1.5 6.6 C-1.1 6.4 -0.7 6.0 -0.3 6.0 C0.1 6.0 0.6 6.7 1.1 6.9 C1.6 7.1 2.0 7.4 2.5 7.4 C3.0 7.4 3.4 7.2 3.8 6.9 C4.2 6.6 4.5 6.0 4.7 5.6 C4.9 5.2 5.0 5.0 5.0 4.4 C5.0 3.8 5.0 2.9 4.8 2.2 C4.6 1.5 4.1 0.4 4.0 0.0 Q0.0 -0.6 -4.0 0.0 Z","r":"M4.0 0.0 C4.0 -0.5 4.2 -1.8 4.2 -3.0 C4.1 -4.2 4.1 -5.8 4.0 -7.0 C3.8 -8.2 3.4 -9.7 3.1 -10.5 C2.8 -11.3 2.4 -12.0 2.1 -12.0 C1.8 -12.0 1.7 -11.3 1.6 -10.5 C1.4 -9.7 1.6 -8.0 1.5 -7.0 C1.4 -6.0 1.4 -5.3 1.1 -4.8 C0.9 -4.3 0.4 -4.0 0.0 -4.0 C-0.4 -4.0 -0.9 -4.3 -1.1 -5.0 C-1.4 -5.7 -1.4 -7.1 -1.5 -8.0 C-1.6 -8.9 -1.6 -9.8 -1.8 -10.4 C-2.0 -11.0 -2.2 -11.5 -2.5 -11.5 C-2.8 -11.5 -3.1 -11.2 -3.3 -10.4 C-3.5 -9.7 -3.6 -8.2 -3.8 -7.0 C-3.9 -5.8 -4.0 -4.2 -4.0 -3.0 C-4.1 -1.8 -4.0 -0.5 -4.0 0.0 Z","p":"M2.1 -3.2 C2.0 -4.0 1.8 -6.5 1.6 -8.0 C1.4 -9.5 1.2 -11.2 0.9 -12.0 C0.6 -12.8 0.3 -13.0 0.0 -13.0 C-0.3 -13.0 -0.6 -12.8 -0.9 -12.0 C-1.2 -11.2 -1.4 -9.5 -1.6 -8.0 C-1.8 -6.5 -2.0 -4.0 -2.1 -3.2 Z","g":"M-0.3 6.0 C-0.3 5.8 -0.4 5.1 -0.4 4.6 C-0.4 4.1 -0.3 3.4 -0.3 3.2"},"U7":{"w":9,"h":7,"c":"M-3.6 0.0 C-3.7 0.3 -4.2 1.4 -4.3 2.1 C-4.5 2.7 -4.5 3.2 -4.5 3.8 C-4.5 4.3 -4.3 5.0 -4.1 5.5 C-3.9 5.9 -3.5 6.1 -3.2 6.3 C-2.9 6.5 -2.7 6.6 -2.3 6.6 C-2.0 6.6 -1.7 6.4 -1.4 6.2 C-1.0 6.0 -0.7 5.6 -0.3 5.6 C0.1 5.7 0.6 6.3 1.0 6.5 C1.4 6.7 1.8 7.0 2.2 7.0 C2.7 7.0 3.1 6.8 3.4 6.5 C3.8 6.2 4.1 5.7 4.2 5.3 C4.4 4.9 4.5 4.7 4.5 4.1 C4.5 3.6 4.5 2.8 4.3 2.1 C4.2 1.4 3.7 0.3 3.6 0.0 Q0.0 -0.6 -3.6 0.0 Z","r":"M3.6 0.0 C3.6 -0.5 3.6 -1.7 3.6 -2.8 C3.5 -3.8 3.4 -5.3 3.2 -6.4 C2.9 -7.6 2.5 -8.9 2.2 -9.7 C1.9 -10.4 1.5 -11.0 1.2 -11.0 C1.0 -11.0 0.9 -10.4 0.8 -9.7 C0.8 -8.9 1.0 -7.3 1.0 -6.4 C0.9 -5.6 0.9 -4.9 0.7 -4.4 C0.5 -4.0 0.1 -3.6 -0.2 -3.7 C-0.6 -3.7 -1.0 -4.0 -1.3 -4.6 C-1.5 -5.2 -1.6 -6.5 -1.8 -7.4 C-1.9 -8.2 -2.0 -9.0 -2.2 -9.6 C-2.4 -10.1 -2.7 -10.6 -2.9 -10.6 C-3.1 -10.6 -3.4 -10.3 -3.5 -9.6 C-3.7 -8.9 -3.7 -7.6 -3.8 -6.4 C-3.8 -5.3 -3.8 -3.8 -3.8 -2.8 C-3.8 -1.7 -3.6 -0.5 -3.6 0.0 Z","p":"M1.6 -2.9 C1.5 -3.7 1.2 -6.0 0.9 -7.4 C0.7 -8.7 0.4 -10.3 0.1 -11.0 C-0.2 -11.8 -0.5 -12.0 -0.7 -12.0 C-1.0 -12.0 -1.2 -11.8 -1.4 -11.0 C-1.6 -10.3 -1.7 -8.7 -1.8 -7.4 C-1.9 -6.0 -1.9 -3.7 -2.0 -2.9 Z","g":"M-0.3 5.6 C-0.3 5.4 -0.4 4.8 -0.4 4.3 C-0.4 3.9 -0.3 3.2 -0.3 3.0"},"U8":{"w":8.5,"h":6.5,"c":"M-3.4 0.0 C-3.5 0.3 -3.9 1.3 -4.1 1.9 C-4.2 2.5 -4.3 3.0 -4.2 3.5 C-4.2 4.0 -4.1 4.7 -3.9 5.1 C-3.7 5.5 -3.3 5.7 -3.1 5.9 C-2.8 6.1 -2.5 6.2 -2.2 6.2 C-1.9 6.1 -1.6 6.0 -1.3 5.8 C-0.9 5.7 -0.6 5.2 -0.3 5.3 C0.1 5.3 0.5 5.9 0.9 6.1 C1.3 6.3 1.7 6.5 2.1 6.5 C2.5 6.5 2.9 6.3 3.2 6.1 C3.5 5.8 3.8 5.3 4.0 4.9 C4.2 4.6 4.2 4.4 4.2 3.9 C4.3 3.4 4.2 2.6 4.1 1.9 C3.9 1.3 3.5 0.3 3.4 0.0 Q0.0 -0.6 -3.4 0.0 Z","r":"M3.4 0.0 C3.4 -0.6 3.5 -2.2 3.3 -3.5 C3.1 -4.8 2.8 -6.4 2.4 -7.5 C1.9 -8.6 1.2 -9.6 0.6 -10.2 C0.0 -10.8 -0.6 -11.1 -1.0 -11.0 C-1.4 -10.9 -1.8 -10.5 -2.1 -9.6 C-2.4 -8.7 -2.7 -7.1 -2.9 -5.5 C-3.1 -3.9 -3.3 -0.9 -3.4 0.0 Z","p":"","g":"M-0.3 5.3 C-0.3 5.1 -0.3 4.5 -0.3 4.0 C-0.3 3.6 -0.3 3.0 -0.3 2.8 M0.3 -3.5 C0.2 -4.0 -0.0 -5.5 -0.2 -6.5 C-0.4 -7.5 -0.8 -8.8 -0.9 -9.2"},"L1":{"w":5,"h":9,"c":"M-1.8 0.0 C-1.8 0.7 -2.0 2.8 -2.1 4.0 C-2.3 5.2 -2.4 6.7 -2.5 7.4 C-2.5 8.1 -2.5 8.2 -2.5 8.4 C-2.5 8.7 -2.6 8.8 -2.2 8.9 C-1.8 9.0 -0.7 9.0 0.0 9.0 C0.7 9.0 1.8 9.0 2.2 8.9 C2.6 8.8 2.5 8.7 2.5 8.4 C2.5 8.2 2.5 8.1 2.5 7.4 C2.4 6.7 2.3 5.2 2.1 4.0 C2.0 2.8 1.8 0.7 1.8 0.0 Q0.0 -1.8 -1.8 0.0 Z","r":"M1.8 0.0 C1.7 -0.7 1.7 -2.5 1.6 -4.0 C1.5 -5.5 1.3 -7.7 1.1 -9.0 C1.0 -10.3 0.7 -11.4 0.5 -12.0 C0.3 -12.6 0.2 -12.5 0.0 -12.5 C-0.2 -12.5 -0.3 -12.6 -0.5 -12.0 C-0.7 -11.4 -1.0 -10.3 -1.1 -9.0 C-1.3 -7.7 -1.5 -5.5 -1.6 -4.0 C-1.7 -2.5 -1.7 -0.7 -1.8 0.0 Z","p":"","g":""},"L2":{"w":5.5,"h":9.5,"c":"M-2.0 0.0 C-2.1 0.7 -2.3 2.8 -2.5 4.0 C-2.6 5.2 -2.7 6.2 -2.8 7.0 C-2.8 7.8 -2.8 8.2 -2.6 8.6 C-2.4 9.0 -2.3 9.2 -1.8 9.3 C-1.3 9.5 -0.5 9.5 0.2 9.5 C0.9 9.5 1.9 9.5 2.3 9.4 C2.7 9.3 2.7 9.2 2.8 8.9 C2.8 8.6 2.8 8.6 2.7 7.8 C2.6 7.0 2.5 5.3 2.4 4.0 C2.3 2.7 2.1 0.7 2.0 0.0 Q0.0 -1.8 -2.0 0.0 Z","r":"M2.0 0.0 C2.0 -0.8 1.9 -2.8 1.8 -4.5 C1.7 -6.2 1.5 -8.5 1.3 -10.0 C1.1 -11.5 0.8 -12.7 0.5 -13.4 C0.2 -14.1 0.0 -14.0 -0.2 -14.0 C-0.4 -14.0 -0.6 -14.0 -0.8 -13.3 C-1.0 -12.6 -1.2 -11.5 -1.4 -10.0 C-1.6 -8.5 -1.8 -6.2 -1.9 -4.5 C-2.0 -2.8 -2.0 -0.8 -2.0 0.0 Z","p":"","g":""},"L3":{"w":7,"h":11,"c":"M-2.8 0.0 C-2.8 0.6 -3.2 2.5 -3.3 3.5 C-3.4 4.5 -3.5 5.3 -3.5 6.0 C-3.5 6.7 -3.4 7.3 -3.1 7.9 C-2.8 8.5 -2.3 9.1 -1.9 9.5 C-1.5 9.9 -1.1 10.3 -0.7 10.5 C-0.3 10.7 -0.0 10.9 0.3 10.9 C0.6 10.9 0.8 10.8 1.2 10.5 C1.6 10.2 2.0 9.8 2.4 9.4 C2.8 9.0 3.1 8.7 3.3 8.3 C3.5 7.9 3.5 7.9 3.5 7.2 C3.4 6.5 3.3 5.2 3.2 4.0 C3.1 2.8 2.8 0.7 2.8 0.0 Q0.0 -2.0 -2.8 0.0 Z","r":"M2.8 0.0 C2.7 -0.8 2.7 -3.2 2.5 -5.0 C2.3 -6.8 2.1 -9.3 1.8 -11.0 C1.5 -12.7 1.1 -14.2 0.8 -15.0 C0.5 -15.8 0.3 -16.0 0.0 -16.0 C-0.3 -16.0 -0.6 -15.8 -0.9 -15.0 C-1.2 -14.2 -1.6 -12.7 -1.9 -11.0 C-2.2 -9.3 -2.4 -6.8 -2.5 -5.0 C-2.6 -3.2 -2.7 -0.8 -2.8 0.0 Z","p":"","g":""},"L4":{"w":7.2,"h":8.5,"c":"M-2.5 0.0 C-2.6 0.4 -3.1 1.7 -3.3 2.4 C-3.5 3.1 -3.6 3.7 -3.6 4.3 C-3.6 4.9 -3.5 5.5 -3.2 6.0 C-2.9 6.5 -2.3 7.1 -1.9 7.5 C-1.5 7.9 -0.9 8.1 -0.6 8.3 C-0.3 8.5 -0.1 8.5 0.1 8.5 C0.3 8.5 0.5 8.5 0.8 8.3 C1.1 8.1 1.7 7.9 2.1 7.5 C2.5 7.1 3.0 6.5 3.3 6.0 C3.5 5.5 3.6 5.1 3.6 4.5 C3.6 3.9 3.5 3.1 3.3 2.4 C3.1 1.6 2.6 0.4 2.5 0.0 Q0.0 -1.2 -2.5 0.0 Z","r":"M2.5 0.0 C2.5 -0.7 2.4 -2.5 2.2 -4.0 C2.1 -5.5 1.9 -7.5 1.7 -9.0 C1.5 -10.5 1.1 -12.2 0.8 -13.0 C0.5 -13.8 0.3 -14.0 0.0 -14.0 C-0.3 -14.0 -0.5 -13.8 -0.8 -13.0 C-1.1 -12.2 -1.5 -10.5 -1.7 -9.0 C-1.9 -7.5 -2.1 -5.5 -2.2 -4.0 C-2.4 -2.5 -2.5 -0.7 -2.5 0.0 Z","p":"","g":""},"L5":{"w":7.4,"h":8,"c":"M-2.6 0.0 C-2.7 0.4 -3.2 1.6 -3.4 2.3 C-3.6 3.0 -3.7 3.6 -3.7 4.2 C-3.7 4.8 -3.7 5.4 -3.4 5.9 C-3.1 6.4 -2.6 6.9 -2.0 7.2 C-1.4 7.5 -0.7 7.9 0.0 7.9 C0.7 7.9 1.4 7.5 2.0 7.2 C2.6 6.9 3.1 6.4 3.4 5.9 C3.7 5.4 3.7 4.8 3.7 4.2 C3.7 3.6 3.6 3.0 3.4 2.3 C3.2 1.6 2.7 0.4 2.6 0.0 Q0.0 -1.2 -2.6 0.0 Z","r":"M2.6 0.0 C2.6 -0.7 2.5 -2.4 2.4 -4.0 C2.2 -5.6 2.1 -7.9 1.8 -9.5 C1.5 -11.1 1.1 -12.7 0.8 -13.5 C0.5 -14.3 0.3 -14.5 0.0 -14.5 C-0.3 -14.5 -0.5 -14.3 -0.8 -13.5 C-1.1 -12.7 -1.5 -11.1 -1.8 -9.5 C-2.1 -7.9 -2.2 -5.6 -2.4 -4.0 C-2.5 -2.4 -2.6 -0.7 -2.6 0.0 Z","p":"","g":""},"L6":{"w":11,"h":7.3,"c":"M-4.5 0.0 C-4.6 0.4 -5.1 1.6 -5.3 2.2 C-5.5 2.8 -5.5 3.3 -5.5 3.8 C-5.5 4.3 -5.3 4.9 -5.2 5.3 C-5.1 5.7 -4.9 5.8 -4.7 6.0 C-4.5 6.2 -4.3 6.3 -4.1 6.3 C-3.9 6.4 -3.7 6.2 -3.5 6.2 C-3.3 6.1 -3.2 5.7 -3.0 5.8 C-2.8 5.9 -2.5 6.5 -2.2 6.7 C-1.9 6.9 -1.6 7.0 -1.3 7.0 C-1.0 7.0 -0.7 6.9 -0.4 6.7 C-0.1 6.5 0.1 6.0 0.4 6.0 C0.7 6.0 1.0 6.7 1.4 6.9 C1.8 7.1 2.2 7.3 2.6 7.3 C3.0 7.3 3.5 7.2 3.9 6.9 C4.3 6.7 4.8 6.2 5.1 5.8 C5.4 5.4 5.5 4.9 5.5 4.3 C5.5 3.7 5.5 2.9 5.3 2.2 C5.1 1.5 4.6 0.4 4.5 0.0 Q0.0 -0.6 -4.5 0.0 Z","r":"M4.5 0.0 C4.5 -0.5 4.7 -1.8 4.7 -3.0 C4.6 -4.2 4.6 -5.7 4.5 -7.0 C4.3 -8.3 4.0 -9.9 3.7 -11.0 C3.4 -12.1 3.0 -13.4 2.7 -13.6 C2.4 -13.8 2.2 -13.2 2.0 -12.4 C1.8 -11.6 1.8 -10.2 1.8 -9.0 C1.7 -7.8 1.6 -6.4 1.5 -5.5 C1.4 -4.6 1.2 -4.1 1.0 -3.7 C0.8 -3.3 0.3 -3.0 0.0 -3.0 C-0.3 -3.0 -0.7 -3.2 -1.0 -3.7 C-1.3 -4.2 -1.4 -5.1 -1.6 -6.0 C-1.8 -6.9 -1.8 -8.0 -2.0 -9.0 C-2.2 -10.0 -2.4 -11.3 -2.6 -12.0 C-2.8 -12.7 -3.1 -13.1 -3.4 -13.0 C-3.7 -12.9 -4.0 -12.5 -4.2 -11.5 C-4.3 -10.5 -4.4 -8.4 -4.5 -7.0 C-4.6 -5.6 -4.7 -4.2 -4.7 -3.0 C-4.7 -1.8 -4.5 -0.5 -4.5 0.0 Z","p":"","g":"M0.4 6.0 C0.4 5.8 0.3 5.0 0.3 4.6 C0.3 4.1 0.4 3.5 0.4 3.3 M-3.0 5.8 C-3.0 5.7 -3.0 5.2 -3.0 5.0 C-3.0 4.8 -3.0 4.4 -3.0 4.3"},"L7":{"w":10.5,"h":7,"c":"M-4.2 0.0 C-4.3 0.3 -4.9 1.5 -5.0 2.1 C-5.2 2.7 -5.3 3.2 -5.2 3.8 C-5.2 4.4 -5.1 5.1 -4.8 5.5 C-4.6 5.9 -4.1 6.2 -3.8 6.4 C-3.4 6.6 -3.1 6.7 -2.7 6.6 C-2.4 6.6 -2.0 6.4 -1.6 6.3 C-1.2 6.1 -0.8 5.7 -0.3 5.7 C0.1 5.7 0.7 6.3 1.2 6.6 C1.6 6.8 2.2 7.0 2.6 7.0 C3.1 7.0 3.6 6.8 4.0 6.6 C4.4 6.3 4.7 5.7 4.9 5.3 C5.1 4.9 5.2 4.7 5.2 4.2 C5.3 3.6 5.2 2.8 5.0 2.1 C4.9 1.4 4.3 0.3 4.2 0.0 Q0.0 -0.6 -4.2 0.0 Z","r":"M4.2 0.0 C4.2 -0.5 4.3 -1.8 4.3 -3.0 C4.2 -4.2 4.1 -5.7 3.9 -7.0 C3.7 -8.3 3.2 -9.7 2.9 -10.6 C2.6 -11.5 2.2 -12.5 1.9 -12.6 C1.6 -12.7 1.4 -12.1 1.3 -11.3 C1.2 -10.5 1.2 -9.0 1.1 -8.0 C1.0 -7.0 1.0 -5.9 0.9 -5.2 C0.8 -4.5 0.7 -4.1 0.5 -3.8 C0.3 -3.5 0.0 -3.3 -0.2 -3.3 C-0.5 -3.3 -0.8 -3.5 -1.0 -4.0 C-1.2 -4.5 -1.4 -5.6 -1.6 -6.5 C-1.8 -7.4 -2.0 -8.4 -2.2 -9.2 C-2.4 -10.0 -2.6 -11.0 -2.9 -11.5 C-3.1 -12.0 -3.5 -12.4 -3.7 -12.2 C-3.9 -12.0 -4.2 -11.4 -4.3 -10.5 C-4.4 -9.6 -4.4 -7.8 -4.4 -6.5 C-4.4 -5.2 -4.3 -4.1 -4.3 -3.0 C-4.3 -1.9 -4.2 -0.5 -4.2 0.0 Z","p":"","g":"M-0.3 5.7 C-0.3 5.5 -0.4 4.8 -0.4 4.4 C-0.4 3.9 -0.3 3.3 -0.3 3.0"},"L8":{"w":10,"h":6.8,"c":"M-4.0 0.0 C-4.1 0.3 -4.6 1.4 -4.8 2.0 C-5.0 2.6 -5.0 3.1 -5.0 3.7 C-5.0 4.2 -4.8 4.9 -4.6 5.3 C-4.4 5.8 -3.9 6.0 -3.6 6.2 C-3.3 6.3 -3.0 6.5 -2.6 6.4 C-2.2 6.4 -1.9 6.2 -1.5 6.1 C-1.1 5.9 -0.7 5.5 -0.3 5.5 C0.1 5.6 0.6 6.1 1.1 6.3 C1.6 6.6 2.0 6.8 2.5 6.8 C3.0 6.8 3.4 6.6 3.8 6.3 C4.2 6.1 4.5 5.5 4.7 5.2 C4.9 4.8 5.0 4.6 5.0 4.0 C5.0 3.5 5.0 2.7 4.8 2.0 C4.6 1.3 4.1 0.3 4.0 0.0 Q0.0 -0.6 -4.0 0.0 Z","r":"M4.0 0.0 C4.0 -0.5 4.1 -1.9 4.0 -3.0 C3.9 -4.1 3.7 -5.4 3.3 -6.5 C2.9 -7.6 2.3 -8.7 1.8 -9.4 C1.3 -10.1 0.7 -10.5 0.2 -10.8 C-0.3 -11.1 -0.9 -11.1 -1.4 -11.0 C-1.9 -10.9 -2.4 -10.7 -2.8 -10.0 C-3.2 -9.3 -3.5 -8.2 -3.7 -7.0 C-3.9 -5.8 -4.0 -4.2 -4.0 -3.0 C-4.0 -1.8 -4.0 -0.5 -4.0 0.0 Z","p":"","g":"M-0.3 5.5 C-0.3 5.3 -0.4 4.7 -0.4 4.2 C-0.4 3.8 -0.3 3.2 -0.3 2.9 M0.2 -3.4 C0.1 -3.8 -0.2 -5.1 -0.5 -6.0 C-0.8 -6.9 -1.4 -8.2 -1.6 -8.6"}};
 const PHOTOS = [];
-["plans", "planSites", "others", "oplans", "oevents"].forEach(k => DATA[k] = DATA[k] || []);
+["plans", "planSites", "others", "oplans", "oevents", "opatients", "photoinfo"].forEach(k => DATA[k] = DATA[k] || []);
+const listOf = v => String(v ?? "").split(/[,，、;；]\s*/).map(s => s.trim()).filter(Boolean);
+const ALLX = v => /^All-on|^全口/.test(String(v || "")) ? "All-on-X" : v;
+let PINFO = {};
 /* backend hook: the live build defines window.API (login, sheet read/write, Drive photos) */
 function persist(ops, msg) {
   if (window.API) return window.API.persist(ops, msg);
@@ -641,7 +738,7 @@ const isAdmin = () => docOf(USER)?.角色 === "管理者";
 const surgeons = () => DATA.doctors.filter(d => d.手術 === "是").map(d => d.姓名);
 const prosths = () => DATA.doctors.filter(d => d.假牙 === "是").map(d => d.姓名);
 function involved(name, who) {
-  return DATA.patients.some(p => p.姓名 === name && p.建立者 === who) ||
+  return DATA.patients.some(p => p.姓名 === name && (p.建立者 === who || listOf(p.經手醫師).includes(who))) ||
     DATA.implants.some(i => i.姓名 === name && i.手術醫師 === who) ||
     DATA.temps.concat(DATA.finals).some(t => t.姓名 === name && t.假牙醫師 === who) ||
     DATA.events.some(e => e.姓名 === name && e.記錄醫師 === who) ||
@@ -658,7 +755,7 @@ const canDelete = () => !peer && isAdmin();
 
 /* ---------- labels ---------- */
 const ET = () => Object.fromEntries(DATA.eventTypes.map(t => [t.類型, t]));
-const EN = { "單顆": "Single", "多顆／局部": "Partial", "全口其他": "Full-arch", "重植": "Re-implant",
+const EN = { "單顆": "Single", "多顆／局部": "Partial", "All-on-X": "All-on-X", "全口其他": "All-on-X", "重植": "Re-implant",
   "全口固定": "Full-arch fixed", "單冠": "Single crown", "牙橋": "Bridge", "覆蓋式活動": "Overdenture" };
 const muaAngle = v => v === "直" ? "0°" : v;
 const en = v => ET()[v]?.en || EN[v] || v;
@@ -666,7 +763,9 @@ const angleInfo = s => { s = String(s || ""); const m = s.match(/(\d+)/); const 
 const angleEn = s => { const a = angleInfo(s); return a.deg === 0 ? "Axial" : `${a.dir === "近心" ? "Mesial" : "Distal"} ${a.deg}°`; };
 
 let peer = store.get("peer", false);
-let view = { tab: "cases", patient: null, filter: "全部", q: "", site: null, cats: [], planCmp: [], other: null, oFilter: "全部", oq: "", ocats: [] };
+let view = { tab: "cases", patient: null, filter: "全部", q: "", site: null, cats: [], planCmp: [], other: null, oFilter: "全部", oq: "", ocats: [], libSel: [], libOpen: false, month: null, rv: { kinds: [], doc: "", year: "", q: "" } };
+const TAGCLS = { "單顆": "single", "多顆／局部": "partial", "All-on-X": "allx", "重植": "re" };
+const tagHTML = (tp, sm) => `<span class="tag ${sm ? "sm" : ""} tg-${TAGCLS[tp] || "other"}">${esc(en(tp))}</span>`;
 const codeOf = n => "Case " + String(DATA.patients.findIndex(p => p.姓名 === n) + 1).padStart(2, "0");
 const label = n => peer ? codeOf(n) : n;
 
@@ -675,6 +774,8 @@ let PROS = [];
 const lastContact = {};
 function derive() {
   const et = ET();
+  DATA.implants.forEach(i => { i.術式 = ALLX(i.術式); });
+  PINFO = Object.fromEntries(DATA.photoinfo.map(i => [i.ID, i]));
   Object.keys(lastContact).forEach(k => delete lastContact[k]);
   const bump = (n, d) => { if (d && (!lastContact[n] || d > lastContact[n])) lastContact[n] = d; };
   DATA.events.forEach(e => bump(e.姓名, e.日期));
@@ -925,9 +1026,11 @@ function drawIntra(text, seed) {
   return cv.toDataURL("image/jpeg", .8);
 }
 function photoMeta(ph) {
+  ph = ph || { 檔名: "" };
   const m = ph.檔名.match(/^(\d{4})(\d{2})(\d{2})_?(.*)\.\w+$/);
-  const date = m ? `${m[1]}-${m[2]}-${m[3]}` : null, rest = m ? m[4] : ph.檔名;
-  return { date, pre: /術前/.test(rest), pano: /pano/i.test(rest), plan: /規劃|設計/.test(rest), text: rest.replace(/_/g, " ").replace(/pano/i, "Pano").trim() };
+  const inf = PINFO[ph.id] || {};
+  const date = inf.日期 || (m ? `${m[1]}-${m[2]}-${m[3]}` : null), rest = inf.分類 || (m ? m[4] : ph.檔名);
+  return { date, cat: rest, pre: /術前/.test(rest), pano: /pano/i.test(rest), plan: /規劃|設計/.test(rest), visit: /回診/.test(rest), text: rest.replace(/_/g, " ").replace(/pano/i, "Pano").trim() };
 }
 function genericMap() { const m = {}; UPPER.concat(LOWER).forEach(n => m[n] = n % 10 === 8 ? { k: "none" } : { k: "tooth" }); return m; }
 const photoSrc = id => window.API ? window.API.photoSrc(id) : synthSrc(id);
@@ -962,7 +1065,7 @@ function synthSrc(id) {
 /* ---------- photo layouts (stored records = 照片排版 sheet) ---------- */
 const LAYOUTS = [];
 const TOUCHED = new Set();
-const RATIOS = { "寬": "21 / 10", "標準": "4 / 3", "方形": "1 / 1" };
+const RATIOS = { "寬": "21 / 10", "標準": "4 / 3", "方形": "1 / 1", "直式": "3 / 4" };
 const LAYOUT_TYPES = ["單張", "並排", "上下", "九宮格", "比對"];
 const DEF_ADJ = { z: 1, x: 0, y: 0, r: 0, b: 100, c: 100 };
 function timelineItems(c) {
@@ -991,6 +1094,7 @@ function photoPlanFor(name, scope, items) {
     if (m.plan) target = items.filter(i => i.isPlan && i.date <= m.date).sort((a, b) => a.date < b.date ? 1 : -1)[0];
     if (!target && m.pre) target = items.filter(i => i.isSurg && i.date >= m.date && mdiff(m.date, i.date) <= 2).sort((a, b) => a.date < b.date ? -1 : 1)[0];
     if (!target) target = items.filter(i => i.date === m.date).sort((a, b) => a.o - b.o)[0];
+    if (!target && m.visit && m.date) target = items.filter(i => (i.kind === "E" || i.kind === "XE") && Math.abs(dd(i.date) - dd(m.date)) <= 14 * 864e5).sort((a, b) => Math.abs(dd(a.date) - dd(m.date)) - Math.abs(dd(b.date) - dd(m.date)))[0];
     if (target && !TOUCHED.has(name + "|" + target.key)) (auto[target.key] = auto[target.key] || []).push(p.id);
     else unassigned.push(p.id);
   });
@@ -1071,22 +1175,35 @@ function listView() {
     </div>`}
     <div class="spread"><input id="q" class="search" type="search" placeholder="${peer ? "搜尋 Case 編號" : "搜尋病人姓名"}" value="${esc(view.q)}" aria-label="搜尋" style="flex:1;min-width:200px">${peer ? "" : `<button class="btn primary" data-act="add-patient">＋ 新增病人</button>`}</div>
     <div class="chips">${["全部", "全口", "單顆／局部", "有併發症", "有失敗"].map(f => `<button class="chip" data-act="filter" data-f="${f}" aria-pressed="${view.filter === f}">${f}</button>`).join("")}</div>
-    <div class="list">${names.length ? names.map(cardHTML).join("") : `<p class="empty">沒有符合的病例</p>`}</div>`;
+    <div class="list cards">${names.length ? names.map(cardHTML).join("") : `<p class="empty">沒有符合的病例</p>`}</div>`;
 }
+const TOOTH_ICON = `<svg width="34" height="40" viewBox="0 0 34 40" aria-hidden="true"><path d="M6 4c4-3 8-1 11 0 3-1 7-3 11 0 4 4 2 12 0 17-1 4-1 14-5 15-3 0-3-9-6-9s-3 9-6 9c-4-1-4-11-5-15C4 16 2 8 6 4Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+function thumbIdFor(name, scope) {
+  const p = scope === "o" ? DATA.opatients.find(x => x.姓名 === name) : DATA.patients.find(x => x.姓名 === name);
+  if (p && p.縮圖) return p.縮圖;
+  const ov = LAYOUTS.find(l => l.姓名 === name && l.歸屬 === (scope === "o" ? "XOV" : "OV") && l.檔案.length);
+  if (ov) return ov.檔案[ov.檔案.length - 1];
+  const ph = photosOf(name, scope).map(x => ({ x, m: photoMeta(x) })).filter(o => !o.m.pre && !o.m.plan).sort((a, b) => (a.m.date || "") < (b.m.date || "") ? 1 : -1)[0];
+  return ph ? ph.x.id : null;
+}
+const cthumbHTML = (name, scope) => { const id = peer ? null : thumbIdFor(name, scope);
+  return id ? `<span class="cthumb" data-src-ph="${id}" style="background-image:url(${photoSrc(id)})"></span>` : `<span class="cthumb">${TOOTH_ICON}</span>`; };
 function cardHTML(n) {
   const c = caseOf(n);
-  const types = [...new Set(c.imps.map(i => i.術式))].filter(t => t !== "重植").map(en);
-  const live = c.imps.filter(i => !i._failed).length, failN = c.imps.filter(i => i._failed).length;
+  const types = [...new Set(c.imps.map(i => i.術式))].filter(t => t !== "重植");
+  const failN = c.imps.filter(i => i._failed).length;
   const comp = c.evs.filter(e => ET()[e.類型]?.程度 === "Success").length;
-  const docs = [...new Set(c.imps.map(i => i.手術醫師).concat(c.temps.concat(c.finals).map(t => t.假牙醫師)))].filter(Boolean);
-  return `<button class="card" data-act="open" data-p="${esc(n)}">
-    <span class="name">${esc(label(n))}</span><span class="when">${c.imps.map(i => i.手術日期).sort()[0] || ""}</span>
-    <span class="sub">${esc(types.join(" + ") || "尚無植體")} · ${live} implant${live === 1 ? "" : "s"} in function${peer ? "" : " · " + esc(docs.join("、"))}</span>
-    ${dotsHTML(c)}
-    <span class="pills">${failN ? `<span class="pill bad">Failed ${failN}</span>` : ""}${comp ? `<span class="pill warn">併發症 ${comp}</span>` : ""}
-      <span class="pill">${c.finals.length ? "Final delivered" : c.temps.length ? "Provisional" : "—"}</span>
-      ${c.p.抽菸 && !["否", "已戒"].includes(c.p.抽菸) ? `<span class="pill warn">抽菸</span>` : ""}${c.p.糖尿病 && c.p.糖尿病 !== "無" ? `<span class="pill warn">糖尿病</span>` : ""}${c.p.咬合力 === "強" ? `<span class="pill warn">咬合力強</span>` : ""}${c.p.夜磨牙 === "有" ? `<span class="pill warn">夜磨牙</span>` : ""}
-    </span></button>`;
+  const docs = [...new Set(c.imps.map(i => i.手術醫師).concat(c.temps.concat(c.finals).map(t => t.假牙醫師), listOf(c.p.經手醫師)))].filter(Boolean);
+  return `<button class="card pc" data-act="open" data-p="${esc(n)}">
+    ${cthumbHTML(n, "i")}
+    <span class="cbody">
+      <span class="row1"><span class="name">${esc(label(n))}</span>${types.length ? types.map(tp => tagHTML(tp)).join("") : `<span class="tag sm tg-other">尚無植體</span>`}</span>
+      <span class="sub">${c.imps.map(i => i.手術日期).sort()[0] || ""}${peer ? "" : " · " + esc(docs.join("、"))}</span>
+      ${dotsHTML(c)}
+      <span class="pills">${failN ? `<span class="pill bad">Failed ${failN}</span>` : ""}${comp ? `<span class="pill warn">併發症 ${comp}</span>` : ""}
+        <span class="pill">${c.finals.length ? "Final delivered" : c.temps.length ? "Provisional" : "—"}</span>
+        ${c.p.抽菸 && !["否", "已戒"].includes(c.p.抽菸) ? `<span class="pill warn">抽菸</span>` : ""}${c.p.糖尿病 && c.p.糖尿病 !== "無" ? `<span class="pill warn">糖尿病${c.p.HbA1c ? " " + esc(c.p.HbA1c) + "%" : ""}</span>` : ""}${c.p.咬合力 === "強" ? `<span class="pill warn">咬合力強</span>` : ""}${c.p.夜磨牙 === "有" ? `<span class="pill warn">夜磨牙</span>` : ""}
+      </span></span></button>`;
 }
 
 /* ---------- case detail ---------- */
@@ -1096,14 +1213,14 @@ function detailView(n) {
   const plan = photoPlan(c);
   const items = timelineItems(c).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.o - b.o);
   return `
-    <button class="back" data-act="back">← 所有病例</button>
     <div class="case-head">
       <div class="spread"><h2>${esc(label(n))}</h2>${canEdit(p) ? `<button class="btn sm" data-act="edit" data-type="patients" data-id="${p.ID}">編輯病人資料</button>` : ""}</div>
       <dl class="facts">
         ${p.主訴 ? `<div class="wide"><dt>主訴</dt><dd>${esc(p.主訴)}</dd></div>` : ""}
         ${peer ? "" : fact("病歷號", p.病歷號)}${fact("性別", p.性別)}${fact("全身病史", p.全身病史, p.全身病史 && p.全身病史 !== "無")}
-        ${fact("抽菸", p.抽菸, p.抽菸 && !["否", "已戒"].includes(p.抽菸))}${fact("糖尿病", p.糖尿病, p.糖尿病 && p.糖尿病 !== "無")}${fact("骨鬆／抗骨吸收藥物", p.骨鬆藥物, p.骨鬆藥物 && p.骨鬆藥物 !== "無")}
+        ${fact("抽菸", p.抽菸, p.抽菸 && !["否", "已戒"].includes(p.抽菸))}${fact("糖尿病", (p.糖尿病 || "") + (p.HbA1c ? ` · HbA1c ${p.HbA1c}%` : ""), p.糖尿病 && p.糖尿病 !== "無")}${fact("骨鬆／抗骨吸收藥物", p.骨鬆藥物, p.骨鬆藥物 && p.骨鬆藥物 !== "無")}
         ${fact("牙周", p.牙周狀況)}${fact("夜磨牙", p.夜磨牙, p.夜磨牙 === "有")}${fact("咬合力", p.咬合力, p.咬合力 === "強")}${fact("咬合", p.咬合)}
+        ${p.經手醫師 && !peer ? `<div class="wide"><dt>經手醫師</dt><dd>${esc(listOf(p.經手醫師).join("、"))}</dd></div>` : ""}
       </dl>
       ${peer ? "" : `<div class="adds">${canSurg() ? `<button class="btn sm" data-act="add-plan">＋ 術前規劃</button><button class="btn sm" data-act="add-surgery">＋ 手術</button>` : ""}${canPros() ? `<button class="btn sm" data-act="add-temp">＋ 臨時假牙</button>` : ""}<button class="btn sm" data-act="add-event">＋ 追蹤／併發症</button>${canPros() ? `<button class="btn sm" data-act="add-final">＋ 正式假牙</button>` : ""}${window.API ? `<button class="btn sm" data-act="upload" data-scope="i">＋ 上傳照片</button>` : ""}</div>`}
     </div>
@@ -1121,9 +1238,43 @@ function detailView(n) {
       <div id="site">${sitePanel(c, view.site)}</div>
     </section>
     ${timelineSection(items.map(it => ({ it, x: itemParts(c, it, plan) })), CATS, view.cats, "cat")}
-    ${plan.unassigned.length ? `<section class="block"><h3>未歸類照片</h3>
-      <p class="hint">資料夾裡這些照片的日期對不到任何病程。按任一病程的「照片」就能把它們加進去。</p>
-      <div class="tray">${plan.unassigned.map(id => thumbHTML(id)).join("")}</div></section>` : ""}`;
+    ${libraryHTML(n, "i", items, plan)}`;
+}
+
+/* ---------- photo library: every photo of the patient, assign to any place (one photo can be used in many places) ---------- */
+function usageMap(name, scope, items, plan) {
+  const use = {};
+  const add = (id, label) => { (use[id] = use[id] || []).push(label); };
+  const lab = k => isOV(k) ? "總覽" : (items.find(i => i.key === k) || {}).date || k;
+  Object.entries(plan.blocks).forEach(([k, bs]) => bs.forEach(b => b.檔案.forEach(id => add(id, lab(k)))));
+  LAYOUTS.filter(l => l.姓名 === name && isOV(l.歸屬) && scopeOfKey(l.歸屬) === scope).forEach(l => l.檔案.forEach(id => add(id, "總覽")));
+  return use;
+}
+function itemLabel(it) {
+  const r = it.rec || {};
+  const t = it.kind === "S" ? en(it.imps[0].術式) : it.kind === "P" || it.kind === "XP" ? "術前規劃" : it.kind === "F" ? "正式假牙" : it.kind === "T" ? "臨時假牙" : it.kind === "XS" ? listOf(r.類型).join("＋") || "治療" : en(r.類型);
+  return `${it.date} · ${t}`;
+}
+function libraryHTML(name, scope, items, plan) {
+  const all = photosOf(name, scope).map(x => ({ x, m: photoMeta(x) })).sort((a, b) => (a.m.date || "") < (b.m.date || "") ? -1 : (a.m.date || "") > (b.m.date || "") ? 1 : a.x.檔名 < b.x.檔名 ? -1 : 1);
+  const editable = !peer && (scope === "o" ? canOther() : canEditCase(name));
+  if (!all.length && !editable) return "";
+  const use = usageMap(name, scope, items, plan), thumbId = (scope === "o" ? DATA.opatients.find(x => x.姓名 === name) : DATA.patients.find(x => x.姓名 === name))?.縮圖;
+  const sel = view.libSel.filter(id => all.some(o => o.x.id === id));
+  const nUn = plan.unassigned.length;
+  const ovKey = scope === "o" ? "XOV" : "OV";
+  return `<section class="block"><details class="lib" ${view.libOpen || sel.length ? "open" : ""} data-lib>
+    <summary><h3>照片庫 <span class="hint">${all.length} 張${nUn ? `，${nUn} 張還沒放到病程` : ""}</span></h3>${editable && window.API ? `<button class="btn sm" data-act="upload" data-scope="${scope}">＋ 上傳照片</button>` : ""}</summary>
+    <p class="hint">同一張照片可以放到很多地方（例如總覽、術前規劃、術後追蹤），檔案只有一份，檔名不會改。點照片選取，再選要放到哪裡。</p>
+    ${editable && sel.length ? `<div class="libbar"><b>已選 ${sel.length} 張</b>
+      <select id="libTarget" aria-label="放到"><option value="${ovKey}">總覽</option>${items.slice().sort((a, b) => a.date < b.date ? 1 : -1).map(it => `<option value="${esc(it.key)}">${esc(itemLabel(it))}</option>`).join("")}</select>
+      <button class="btn primary sm" data-act="lib-add">放進去</button>
+      ${sel.length === 1 ? `<button class="btn sm" data-act="lib-thumb">設為小卡縮圖</button>` : ""}
+      <button class="btn sm" data-act="lib-edit">改日期／分類</button>
+      <button class="btn ghost sm" data-act="lib-clear">取消選取</button></div>` : ""}
+    <div class="tgrid">${all.map(({ x, m }) => { const k = sel.indexOf(x.id), u = use[x.id] || [];
+      return `<button type="button" class="thumb" data-act="${editable ? "lib-pick" : "zoom"}" data-ph="${x.id}" aria-pressed="${k >= 0}"><span class="im" data-src-ph="${x.id}" style="background-image:url(${photoSrc(x.id)})">${k >= 0 ? `<b>${k + 1}</b>` : ""}${thumbId === x.id ? `<span class="star">縮圖</span>` : ""}<span class="use">${u.length ? "已用 " + u.length : "未使用"}</span></span><span>${esc((m.date || "").slice(2))} ${esc(m.text)}</span></button>`; }).join("")}</div>
+  </details></section>`;
 }
 const thumbHTML = (id, pressed, num, used, act) => { const ph = PHOTOS.find(p => p.id === id) || { 檔名: "" };
   return `<button type="button" class="thumb" ${act ? `data-act="${act}"` : 'data-act="zoom"'} data-ph="${id}" aria-pressed="${!!pressed}"><span class="im" data-src-ph="${id}" style="background-image:url(${photoSrc(id)})">${num ? `<b>${num}</b>` : ""}${used ? `<em>${esc(used)}</em>` : ""}</span><span>${esc(ph.檔名)}</span></button>`; };
@@ -1176,7 +1327,7 @@ function itemParts(c, it, plan) {
     const imps = it.imps.slice().sort((a, b) => a.部位 - b.部位), s = imps[0];
     const arches = [...new Set(imps.map(i => archOfSite(+i.部位)))].join("、");
     const anyEdit = !peer && imps.some(canEdit);
-    return { cat: "surg", title: esc(en(s.術式)), loc: `${arches} · ${imps.map(i => i.部位).join(" ")}`,
+    return { cat: "surg", title: tagHTML(s.術式), loc: `${arches} · ${imps.map(i => i.部位).join(" ")}`,
       acts: anyEdit ? `<button class="btn ghost sm" data-act="photos" data-key="${it.key}">照片</button>` : "",
       body: `${kv([["Surgeon", esc(s.手術醫師)], ["Navigation", esc(s.導航)], ["Loading", esc(s.負重)]])}
         <div class="imps">${imps.map(i => implantCard(i, true)).join("")}</div>
@@ -1202,20 +1353,23 @@ const OPT = {
   性別: ["男", "女"], 抽菸: ["否", "已戒", "每天10支以下", "每天10支以上"], 糖尿病: ["無", "有（控制良好）", "有（控制不佳）"],
   骨鬆藥物: ["無", "口服雙磷酸鹽", "注射雙磷酸鹽", "Denosumab", "其他"], 牙周狀況: ["健康", "牙齦炎", "牙周病 Stage I–II", "牙周病 Stage III–IV"],
   夜磨牙: ["無", "疑似", "有"], 咬合力: ["一般", "強"],
-  術式: ["單顆", "多顆／局部", "All-on-4", "All-on-6", "全口其他", "重植"], 導航: ["X-Guide", "Static guide", "Freehand"],
+  術式: ["單顆", "多顆／局部", "All-on-X", "重植"], 導航: ["X-Guide", "Static guide", "Freehand"],
   負重: ["Immediate loading", "Immediate prosthesis", "Early loading", "Conventional loading"], 拔牙原因: ["", "蛀牙", "牙周病", "斷裂", "殘根", "其他"], 系統: ["NobelParallel CC", "NobelActive", "N1", "其他"],
   平台: ["NP", "RP", "WP", "3.0"], 角度: ["軸向", "近心 17°", "遠心 17°", "近心 30°", "遠心 30°"], 骨質: ["", "D1", "D2", "D3", "D4"],
   骨增生: ["無", "GBR", "上顎竇外側開窗", "上顎竇內提", "Ridge split", "塊狀骨移植", "其他"], 即拔即種: ["否", "是"], MUA角度: ["無", "直", "17°", "30°"],
   類型: ["全口固定", "單冠", "牙橋", "覆蓋式活動"], 材質T: ["PMMA", "PMMA＋金屬補強", "3D 列印樹脂", "其他"], 材質F: ["鈦支架＋氧化鋯", "全氧化鋯", "鈦支架＋樹脂", "PFM", "其他"],
   abutment: ["MUA＋Temporary Coping", "MUA 直接螺絲固位", "Ti-base", "Temporary Abutment", "客製化 abutment", "成品 abutment", "Locator", "其他"],
   螺絲: ["Prosthetic Screw Multi-unit", "Clinical Screw", "Omnigrip Clinical Screw", "其他"], 出血化膿: ["無", "BOP", "化膿"],
-  其他類型: ["腫瘤", "囊腫", "補骨", "拔牙", "切除", "正顎", "骨折", "其他"],
+  其他類型: ["根管治療", "美學", "自體移植", "腫瘤", "囊腫", "補骨", "拔牙", "切除", "正顎", "骨折", "外傷", "顳顎關節", "其他"],
   其他事件: ["例行追蹤", "傷口感染", "傷口裂開", "神經感覺異常", "出血", "骨粉／植骨失敗", "復發", "再次手術", "其他併發症"],
   可能原因: ["", "初期穩定度不足", "術後感染", "鑽孔過熱", "過早或過度負重", "咬合力過大／夜磨牙", "位置／角度不良", "骨量不足", "口腔衛生不良", "病人因素（抽菸、系統性）", "假牙設計", "不明"],
 };
 const F = (k, label, type, extra = {}) => ({ k, label: label || k, type, ...extra });
-const PATIENT_F = [F("姓名", "", "text", { req: 1 }), F("病歷號", "", "text"), F("性別", "", "sel"), F("主訴", "", "area", { wide: 1 }), F("全身病史", "", "text"), F("抽菸", "", "sel"), F("糖尿病", "", "sel"),
-  F("骨鬆藥物", "骨鬆／抗骨吸收藥物", "sel"), F("牙周狀況", "", "sel"), F("夜磨牙", "", "sel"), F("咬合力", "", "sel"), F("咬合", "咬合（對咬牙列）", "text"), F("備註", "", "area", { wide: 1 })];
+const PATIENT_F = [F("姓名", "", "text", { req: 1 }), F("病歷號", "", "text"), F("性別", "", "sel"), F("主訴", "", "area", { wide: 1 }), F("全身病史", "", "text"), F("抽菸", "", "sel"), F("糖尿病", "", "sel"), F("HbA1c", "HbA1c（%）", "num"),
+  F("骨鬆藥物", "骨鬆／抗骨吸收藥物", "sel"), F("牙周狀況", "", "sel"), F("夜磨牙", "", "sel"), F("咬合力", "", "sel"), F("咬合", "咬合（對咬牙列）", "text"),
+  F("經手醫師", "經手醫師（可複選，被選到的醫師就看得到這位病人）", "multi", { wide: 1, opts: () => DATA.doctors.map(d => d.姓名), adminOnly: 1 }), F("備註", "", "area", { wide: 1 })];
+const OPAT_F = [F("姓名", "", "text", { req: 1 }), F("病歷號", "", "text"), F("性別", "", "sel"), F("主訴", "", "area", { wide: 1 }), F("全身病史", "", "text"), F("抽菸", "", "sel"),
+  F("糖尿病", "", "sel"), F("HbA1c", "HbA1c（%）", "num"), F("備註", "", "area", { wide: 1 })];
 const SURG_F = [F("手術日期", "", "date", { req: 1 }), F("手術醫師", "", "doc", { req: 1, list: "s" }), F("術式", "", "sel"), F("導航", "Navigation", "sel"), F("負重", "Loading", "sel")];
 const SITE_F = [F("系統", "", "sel"), F("平台", "", "sel"), F("直徑", "直徑 mm", "num"), F("長度", "長度 mm", "num"), F("角度", "傾斜角度（shoulder）", "sel"), F("骨質", "", "sel"),
   F("植入扭力", "植入扭力 Ncm", "num"), F("ISQ", "", "num"), F("骨增生", "", "sel"), F("即拔即種", "", "sel"), F("拔牙原因", "", "sel"), F("MUA角度", "MUA 角度", "sel"), F("MUA高度", "MUA 高度 mm", "num"),
@@ -1223,9 +1377,9 @@ const SITE_F = [F("系統", "", "sel"), F("平台", "", "sel"), F("直徑", "直
 const PROS_F = fin => [F("交付日期", "Delivery 日期", "date", { req: 1 }), F("牙弓部位", "牙弓／部位", "text", { req: 1, ph: "上顎全口、下顎全口，或 FDI 如 36" }), F("假牙醫師", "", "doc", { req: 1, list: "p" }),
   F("類型", "", "sel"), F("材質", "", "sel", { opts: fin ? OPT.材質F : OPT.材質T }), F("abutment", "Abutment 種類", "sel"), F("螺絲", "Prosthetic screw", "sel"), F("扭力", "鎖緊扭力 Ncm", "num"),
   F("技工所", "", "text"), F("備註", "", "area", { wide: 1 })];
-const OTHER_F = [F("日期", "手術日期", "date", { req: 1 }), F("姓名", "", "text", { req: 1 }), F("病歷號", "", "text"), F("類型", "手術類型", "sel", { opts: OPT.其他類型 }),
-  F("部位", "部位／範圍", "text"), F("手術醫師", "", "doc", { req: 1, list: "o" }), F("診斷", "", "text", { wide: 1 }), F("術式", "手術內容", "area", { wide: 1 }),
-  F("檢討", "手術檢討", "area", { wide: 1 })];
+const OTHER_F = [F("日期", "治療日期", "date", { req: 1 }), F("類型", "治療類別（可複選）", "multi", { wide: 1, opts: () => OPT.其他類型 }),
+  F("部位", "部位／範圍", "text"), F("手術醫師", "醫師", "doc", { req: 1, list: "o" }), F("診斷", "", "text", { wide: 1 }), F("術式", "治療內容", "area", { wide: 1 }),
+  F("檢討", "檢討", "area", { wide: 1 })];
 const OPLAN_F = [F("日期", "規劃日期", "date", { req: 1 }), F("規劃醫師", "", "doc", { req: 1, list: "o" }), F("對應手術日期", "對應手術日期（空白＝規劃後第一次手術）", "date"),
   F("規劃", "規劃內容", "area", { wide: 1 }), F("考量", "考量與風險", "area", { wide: 1 }), F("術後對照", "術後實際與差異（術後再填）", "area", { wide: 1 })];
 const OEVENT_F = [F("日期", "", "date", { req: 1 }), F("記錄醫師", "", "doc", { req: 1, list: "o" }), F("類型", "類型", "sel", { req: 1, opts: OPT.其他事件 }),
@@ -1249,6 +1403,9 @@ function fieldHTML(f, v, pre, c) {
     const lock = !isAdmin();
     const cur = val || (all.includes(USER) ? USER : all[0]);
     input = `<select id="${id}" data-k="${f.k}" ${lock ? "disabled" : ""}>${(lock ? [cur] : all).map(o => `<option ${o === cur ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+  } else if (f.type === "multi") {
+    const opts = typeof f.opts === "function" ? f.opts() : f.opts || [], cur = listOf(val), lock = f.adminOnly && !isAdmin();
+    return `<div class="f ${f.wide ? "wide" : ""}"><span>${esc(f.label)}${star}</span><div class="mchips" id="${id}" data-k="${f.k}" data-multi="1">${opts.concat(cur.filter(v => !opts.includes(v))).map(o => `<button type="button" class="chip" data-act="mchip" data-v="${esc(o)}" aria-pressed="${cur.includes(o)}" ${lock ? "disabled" : ""}>${esc(o)}</button>`).join("")}</div></div>`;
   } else if (f.type === "area") input = `<textarea id="${id}" data-k="${f.k}">${esc(val)}</textarea>`;
   else if (f.type === "site") {
     const sites = [...new Set((c ? c.imps.map(i => +i.部位) : []))].sort((a, b) => a - b);
@@ -1260,11 +1417,12 @@ function readFields(root, fields) {
   const out = {}; let ok = true;
   fields.forEach(f => {
     const el = root.querySelector(`[data-k="${f.k}"]`); if (!el) return;
+    if (el.dataset.multi) { out[f.k] = [...el.querySelectorAll('[aria-pressed="true"]')].map(b => b.dataset.v).join("、"); return; }
     let v = el.value.trim();
     if (f.type === "num") v = v === "" ? "" : +v;
     if (f.type === "site") v = siteNum(v) ?? v;
     const bad = f.req && (v === "" || v == null);
-    el.closest(".f").classList.toggle("bad", bad); if (bad) ok = false;
+    const fl = el.closest(".f"); if (fl) fl.classList.toggle("bad", bad); if (bad) ok = false;
     out[f.k] = v;
   });
   return ok ? out : null;
@@ -1275,7 +1433,7 @@ function openSheet(title, body, foot, onMount) {
   document.body.style.overflow = "hidden";
   onMount && onMount($(".sheet", L));
 }
-function closeSheet() { $("#layer").innerHTML = ""; document.body.style.overflow = ""; }
+function closeSheet() { $("#layer").innerHTML = ""; document.body.style.overflow = $("#modal") && $("#modal").innerHTML ? "hidden" : ""; }
 const footHTML = (canDel, saveLabel = "儲存") => `<span class="left">${canDel ? `<button class="btn warn sm" data-act="del">刪除</button><span id="delc" hidden><span class="err">確定刪除這筆？</span> <button class="btn warn sm" data-act="del-yes">刪除</button> <button class="btn sm" data-act="del-no">取消</button></span>` : ""}<span class="err" id="ferr"></span></span><button class="btn" data-act="close">取消</button><button class="btn primary" data-act="save">${saveLabel}</button>`;
 let FORM = null;
 const TYPES = {
@@ -1284,22 +1442,24 @@ const TYPES = {
   temps: { title: "臨時假牙", fields: () => PROS_F(false) },
   finals: { title: "正式假牙", fields: () => PROS_F(true) },
   events: { title: "追蹤／併發症", fields: () => EVENT_F },
-  others: { title: "其他手術", fields: () => OTHER_F },
+  others: { title: "治療紀錄", fields: () => OTHER_F },
+  opatients: { title: "病人基本資料", fields: () => OPAT_F },
   oplans: { title: "術前規劃", fields: () => OPLAN_F },
   oevents: { title: "追蹤／併發症", fields: () => OEVENT_F },
 };
 const DEFAULTS = { 性別: "女", 抽菸: "否", 糖尿病: "無", 骨鬆藥物: "無", 牙周狀況: "健康", 夜磨牙: "無", 咬合力: "一般", 術式: "單顆", 導航: "X-Guide", 負重: "Conventional loading",
   系統: "NobelParallel CC", 平台: "RP", 角度: "軸向", 骨增生: "無", 即拔即種: "否", MUA角度: "無", 類型: "全口固定", 出血化膿: "無", 可能原因: "" };
 function openRecordForm(type, rec) {
-  const T = TYPES[type], fields = T.fields(), isNew = !rec, oType = ["others", "oplans", "oevents"].includes(type);
+  const T = TYPES[type], fields = T.fields(), isNew = !rec, oType = ["others", "oplans", "oevents", "opatients"].includes(type);
   const c = !oType && view.patient ? caseOf(view.patient) : null;
-  const base = rec || Object.assign({}, DEFAULTS, { 手術日期: today(), 交付日期: today(), 日期: today(), 類型: ["events", "oevents"].includes(type) ? "例行追蹤" : type === "temps" ? "全口固定" : type === "others" ? "腫瘤" : "單冠" });
-  if (!rec && type === "others" && view.other) { const last = otherCase(view.other).surgs.slice(-1)[0]; Object.assign(base, { 姓名: view.other, 病歷號: last ? last.病歷號 : "" }); }
+  const base = rec || Object.assign({}, DEFAULTS, { 手術日期: today(), 交付日期: today(), 日期: today(), 類型: ["events", "oevents"].includes(type) ? "例行追蹤" : type === "temps" ? "全口固定" : type === "others" ? "" : "單冠" });
+  if (!rec && type === "others") base.術式 = "";
+  if (!rec && type === "opatients" && view.other) Object.assign(base, { 姓名: view.other, 病歷號: (otherCase(view.other).surgs.slice(-1)[0] || {}).病歷號 || "" });
   if (!rec && type === "events") base.MUA角度 = "直";
   if (type === "temps" && isNew) Object.assign(base, { 材質: "PMMA", abutment: "MUA＋Temporary Coping", 螺絲: "Prosthetic Screw Multi-unit", 扭力: 15 });
   if (type === "finals" && isNew) Object.assign(base, { 材質: "全氧化鋯", abutment: "Ti-base", 螺絲: "Clinical Screw" });
   FORM = { type, rec, fields };
-  const who = oType ? (view.other && type !== "others" ? oLabel(view.other) : "") : c && type !== "patients" ? label(c.p.姓名) : "";
+  const who = oType ? (view.other && type !== "opatients" ? oLabel(view.other) : "") : c && type !== "patients" ? label(c.p.姓名) : "";
   openSheet(`${isNew ? "新增" : "編輯"}${T.title}${who ? " · " + who : ""}`,
     `<div class="fgrid">${fields.map(f => fieldHTML(f, base[f.k], "fm-", c)).join("")}</div>${isAdmin() && type !== "patients" ? `<p class="hint">替其他醫師登記時，把醫師欄位改成那位醫師；之後他也能修改這筆紀錄。</p>` : ""}${!isNew ? `<p class="hint">建立者：${esc(rec.建立者)}　正式版會記下每次修改的人和時間。</p>` : ""}`,
     footHTML(!isNew && canDelete()));
@@ -1312,6 +1472,18 @@ function saveRecordForm(sheet) {
   const v = readFields(sheet, FORM.fields);
   if (!v) { $("#ferr").textContent = "請填寫標 * 的欄位"; return; }
   const arr = DATA[FORM.type];
+  if (FORM.type === "opatients") {
+    const dup = otherNames().includes(v.姓名) && (!FORM.rec || FORM.rec.姓名 !== v.姓名) && !(view.other === v.姓名 && !FORM.rec);
+    if (dup) { $("#ferr").textContent = "已有同名病人，請在名字後加出生年份區分"; return; }
+    const from = FORM.rec ? FORM.rec.姓名 : view.other;
+    if (from && from !== v.姓名) {
+      ["others", "oplans", "oevents"].forEach(k => DATA[k].forEach(r => { if (r.姓名 === from) r.姓名 = v.姓名; }));
+      LAYOUTS.forEach(l => { if (l.姓名 === from && scopeOfKey(l.歸屬) === "o") l.姓名 = v.姓名; });
+      PHOTOS.forEach(ph => { if (ph.姓名 === from && ph.範圍 === "o") ph.姓名 = v.姓名; });
+      DATA.photoinfo.forEach(ph => { if (ph.姓名 === from && ph.範圍 === "o") ph.姓名 = v.姓名; });
+      FORM.rename = { from, to: v.姓名, scope: "o" };
+    }
+  }
   if (FORM.type === "patients") {
     const dup = DATA.patients.some(p => p.姓名 === v.姓名 && p !== FORM.rec);
     if (dup) { $("#ferr").textContent = "已有同名病人，請在名字後加出生年份區分，例如「王小明(62)」"; return; }
@@ -1319,6 +1491,7 @@ function saveRecordForm(sheet) {
       ["implants", "temps", "finals", "events", "plans"].forEach(k => DATA[k].forEach(r => { if (r.姓名 === FORM.rec.姓名) r.姓名 = v.姓名; }));
       LAYOUTS.forEach(l => { if (l.姓名 === FORM.rec.姓名 && scopeOfKey(l.歸屬) === "i") l.姓名 = v.姓名; });
       PHOTOS.forEach(ph => { if (ph.姓名 === FORM.rec.姓名 && (ph.範圍 || "i") === "i") ph.姓名 = v.姓名; });
+      DATA.photoinfo.forEach(ph => { if (ph.姓名 === FORM.rec.姓名 && (ph.範圍 || "i") === "i") ph.姓名 = v.姓名; });
       FORM.rename = { from: FORM.rec.姓名, to: v.姓名 };
     }
     if (FORM.rec && view.patient === FORM.rec.姓名) view.patient = v.姓名;
@@ -1327,13 +1500,13 @@ function saveRecordForm(sheet) {
   if (r) Object.assign(r, v);
   else {
     r = Object.assign({ ID: uid(FORM.type[0].toUpperCase()), 建立者: USER }, v);
-    if (["oplans", "oevents"].includes(FORM.type)) r.姓名 = view.other;
-    else if (!["patients", "others"].includes(FORM.type)) r.姓名 = view.patient;
+    if (["oplans", "oevents", "others"].includes(FORM.type)) r.姓名 = view.other;
+    else if (!["patients", "opatients"].includes(FORM.type)) r.姓名 = view.patient;
     arr.push(r);
     if (FORM.type === "patients") view.patient = r.姓名;
   }
-  if (FORM.type === "others") view.other = r.姓名;
-  const ops = (FORM.rename ? [{ op: "rename", from: FORM.rename.from, to: FORM.rename.to }] : []).concat([{ op: "put", type: FORM.type, rec: r }]);
+  if (FORM.type === "opatients") view.other = r.姓名;
+  const ops = (FORM.rename ? [Object.assign({ op: "rename" }, FORM.rename)] : []).concat([{ op: "put", type: FORM.type, rec: r }]);
   closeSheet(); derive(); render(); persist(ops, "已儲存");
 }
 function deleteRecord() {
@@ -1347,14 +1520,14 @@ function deleteRecord() {
     ["implants", "temps", "finals", "events", "plans"].forEach(k => { DATA[k] = DATA[k].filter(r => r.姓名 !== FORM.rec.姓名); }); view.patient = null;
   }
   if (FORM.type === "plans") { DATA.planSites.filter(s => s.規劃ID === FORM.rec.ID).forEach(s => ops.push({ op: "del", type: "planSites", id: s.ID })); DATA.planSites = DATA.planSites.filter(s => s.規劃ID !== FORM.rec.ID); }
-  if (["others", "oplans", "oevents"].includes(FORM.type) && view.other && !otherNames().includes(view.other)) view.other = null;
+  if (["others", "oplans", "oevents", "opatients"].includes(FORM.type) && view.other && !otherNames().includes(view.other)) view.other = null;
   closeSheet(); derive(); render(); persist(ops, "已刪除");
 }
 
 /* surgery (several implants at once) */
 let SURG = null;
 function openSurgeryForm() {
-  SURG = { mode: "surgery", shared: Object.assign({}, DEFAULTS, { 手術日期: today(), 術式: "All-on-4", 負重: "Immediate loading" }), sites: [], vals: {} };
+  SURG = { mode: "surgery", shared: Object.assign({}, DEFAULTS, { 手術日期: today(), 術式: "All-on-X", 負重: "Immediate loading" }), sites: [], vals: {} };
   openSheet(`新增手術 · ${label(view.patient)}`, surgeryBody(), footHTML(false, "儲存手術"));
 }
 function openPlanForm(rec) {
@@ -1487,47 +1660,128 @@ function saveEditor() {
 
 /* photo upload (live build only): files are resized in the browser, then saved to the patient's Drive folder */
 let UP = null;
-const UP_LABELS = ["術前_pano", "術後_pano", "pano", "CBCT", "口內正面", "右側", "左側", "上顎咬合面", "下顎咬合面", "微笑", "術中", "規劃_設計截圖", "其他"];
+const UP_LABELS = ["未分類", "術前_pano", "術前_口內", "術前_口外", "術前_CBCT", "規劃_設計截圖", "術中", "術後_pano", "術後_口內", "術後_口外", "回診_pano", "回診_口內", "回診_口外", "CBCT", "其他"];
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+async function exifDate(file) {
+  try {
+    const buf = new DataView(await file.slice(0, 256 * 1024).arrayBuffer());
+    if (buf.getUint16(0) !== 0xFFD8) return null;
+    let off = 2;
+    while (off < buf.byteLength - 4) {
+      const mk = buf.getUint16(off), len = buf.getUint16(off + 2);
+      if (mk === 0xFFE1 && buf.getUint32(off + 4) === 0x45786966) {
+        const t0 = off + 10, le = buf.getUint16(t0) === 0x4949, u16 = o => buf.getUint16(t0 + o, le), u32 = o => buf.getUint32(t0 + o, le);
+        const str = (o, n) => { let s = ""; for (let i = 0; i < n; i++) s += String.fromCharCode(buf.getUint8(t0 + o + i)); return s; };
+        const scan = (ifd, want) => { const n = u16(ifd); for (let i = 0; i < n; i++) { const e = ifd + 2 + i * 12; if (want.includes(u16(e))) return { tag: u16(e), val: u32(e + 8) }; } return null; };
+        const ifd0 = u32(4), sub = scan(ifd0, [0x8769]);
+        let hit = sub ? scan(sub.val, [0x9003, 0x9004]) : null;
+        if (!hit) hit = scan(ifd0, [0x0132]);
+        if (hit) { const s = str(hit.val, 19), m = s.match(/^(\d{4}):(\d{2}):(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`; }
+        return null;
+      }
+      if ((mk & 0xFF00) !== 0xFF00) break;
+      off += 2 + len;
+    }
+  } catch (e) {}
+  return null;
+}
 function openUpload(scope) {
   const name = ED ? ED.name : scope === "o" ? view.other : view.patient;
-  UP = { scope, name, files: [], fromEditor: !!ED };
+  UP = { scope, name, rows: [], fromEditor: !!ED, busy: false };
   openSheet(`上傳照片 · ${scope === "o" ? oLabel(name) : label(name)}`, `
-    <label class="f wide"><span>選擇照片（可以一次選多張）</span><input id="upf" type="file" accept="image/*" multiple></label>
+    <label class="f wide"><span>選擇照片（可以一次選很多張）</span><input id="upf" type="file" accept="image/*" multiple></label>
     <div class="fgrid">
-      <label class="f"><span>拍攝日期</span><input id="upd" type="date" value="${today()}"></label>
-      <label class="f"><span>內容</span><select id="upl">${UP_LABELS.map(l => `<option>${l}</option>`).join("")}</select></label>
-      <label class="f wide"><span>補充說明（選填，會加在檔名後面）</span><input id="upx" placeholder="例：25 失敗、術後 6 月"></label>
+      <label class="f"><span>全部套用分類</span><select id="upall">${UP_LABELS.map(l => `<option>${l}</option>`).join("")}</select></label>
+      <label class="f"><span>全部套用日期（空白＝照片自己的拍攝日）</span><input id="upd" type="date"></label>
     </div>
-    <p class="hint">檔名會自動取成「日期_內容」，例如 20261019_術後_pano.jpg；網頁依日期把照片放到對應的病程。上傳前會先縮小到長邊 2400 px。</p>
-    <div class="tgrid" id="upv"></div>`,
+    <p class="hint">每張照片會用自己的拍攝日期。分類先選「未分類」也沒關係，之後在照片庫再改；改分類只記在試算表，雲端硬碟的檔名不會變。上傳前會先縮到長邊 2400 px。</p>
+    <div id="upv" class="lib"></div>
+    <div id="upp" hidden><div class="prog"><i id="upbar"></i></div><p class="hint" id="uptxt"></p></div>`,
     `<span class="left"><span class="err" id="ferr"></span></span><button class="btn" data-act="up-cancel">取消</button><button class="btn primary" data-act="up-go">上傳</button>`);
-  $("#upf").addEventListener("change", e => {
-    UP.files = [...e.target.files];
-    $("#upv").innerHTML = UP.files.map(f => `<span class="thumb"><span class="im" style="background-image:url(${URL.createObjectURL(f)})"></span><span>${esc(f.name)}</span></span>`).join("");
-    const lm = UP.files[0] && UP.files[0].lastModified;
-    if (lm) { const d = new Date(lm); $("#upd").value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
+  const draw = () => { $("#upv").innerHTML = UP.rows.map((r, i) => `<div class="uprow" data-i="${i}"><span class="im" style="background-image:url(${r.url})"></span>
+      <input type="date" data-up="date" data-i="${i}" value="${r.date}" aria-label="拍攝日期"><select data-up="cat" data-i="${i}" aria-label="分類">${UP_LABELS.map(l => `<option ${l === r.cat ? "selected" : ""}>${l}</option>`).join("")}</select></div>`).join(""); };
+  $("#upf").addEventListener("change", async e => {
+    const files = [...e.target.files];
+    UP.rows = await Promise.all(files.map(async f => ({ file: f, url: URL.createObjectURL(f), date: (await exifDate(f)) || ymd(new Date(f.lastModified || Date.now())), cat: $("#upall").value })));
+    draw();
   });
+  $("#upall").addEventListener("change", e => { UP.rows.forEach(r => r.cat = e.target.value); draw(); });
+  $("#upd").addEventListener("change", e => { if (e.target.value) { UP.rows.forEach(r => r.date = e.target.value); draw(); } });
+  $("#upv").addEventListener("change", e => { const el = e.target.closest("[data-up]"); if (!el) return; UP.rows[+el.dataset.i][el.dataset.up] = el.value; });
 }
 async function doUpload() {
-  if (!UP.files.length) { $("#ferr").textContent = "請先選擇照片"; return; }
-  const date = $("#upd").value.replace(/-/g, ""), extra = $("#upx").value.trim().replace(/[\\/:*?"<>|\s]+/g, "_");
-  const base = `${date}_${$("#upl").value}${extra ? "_" + extra : ""}`;
+  if (!UP.rows.length) { $("#ferr").textContent = "請先選擇照片"; return; }
+  if (UP.busy) return;
+  UP.busy = true;
   const btn = $("[data-act=up-go]"); btn.disabled = true; btn.textContent = "上傳中…";
+  $("#upp").hidden = false;
+  const items = UP.rows.map(r => ({ file: r.file, base: `${r.date.replace(/-/g, "")}_${r.cat}` }));
+  const prog = (frac, done, n) => { const b = $("#upbar"); if (b) b.style.width = Math.round(frac * 100) + "%"; const tx = $("#uptxt"); if (tx) tx.textContent = `已完成 ${done} / ${n} 張（${Math.round(frac * 100)}%）`; };
   try {
-    const added = await window.API.upload(UP.name, UP.scope, UP.files, base, (i, n) => { btn.textContent = `上傳中 ${i}/${n}`; });
+    const res = await window.API.upload(UP.name, UP.scope, items, prog, (i, ok) => { const row = $(`.uprow[data-i="${i}"]`); if (row) row.classList.add(ok ? "done" : "err"); });
+    const added = res.filter(Boolean);
     added.forEach(ph => PHOTOS.push(ph));
-    toast(`已上傳 ${added.length} 張`);
+    const failed = res.length - added.length;
+    toast(`已上傳 ${added.length} 張${failed ? `，${failed} 張失敗（標紅框），可以再試一次` : ""}`);
+    if (failed) { UP.rows = UP.rows.filter((r, i) => !res[i]); UP.busy = false; btn.disabled = false; btn.textContent = "重試失敗的"; $("#upv").innerHTML = ""; return; }
     if (UP.fromEditor && ED) { const bk = ED.blocks[ED.active]; added.forEach(ph => bk.檔案.push(ph.id)); ED.sel = added[0]?.id || ED.sel; UP = null; reopenEditor(); }
-    else { UP = null; closeSheet(); render(); }
-  } catch (err) { btn.disabled = false; btn.textContent = "上傳"; $("#ferr").textContent = "上傳失敗：" + (err.message || err); }
+    else { UP = null; view.libOpen = true; closeSheet(); render(); }
+  } catch (err) { UP.busy = false; btn.disabled = false; btn.textContent = "上傳"; $("#ferr").textContent = "上傳失敗：" + (err.message || err); }
+}
+
+/* photo library actions */
+function libContext() {
+  const scope = view.other ? "o" : "i", name = scope === "o" ? view.other : view.patient;
+  const items = scope === "o" ? otherItems(otherCase(name)) : timelineItems(caseOf(name));
+  return { scope, name, items };
+}
+function libAdd() {
+  const { scope, name, items } = libContext(), key = $("#libTarget").value, ids = view.libSel.slice();
+  const blocks = JSON.parse(JSON.stringify(blocksFor(name, key)));
+  if (!blocks.length) blocks.push(mkBlock(name, key, ids.length === 1 ? "單張" : ids.length === 2 ? "並排" : "九宮格", []));
+  const b = blocks[blocks.length - 1];
+  ids.forEach(id => { if (!b.檔案.includes(id)) b.檔案.push(id); });
+  if (b.排版 === "單張" && b.檔案.length > 1) b.排版 = b.檔案.length === 2 ? "並排" : "九宮格";
+  for (let i = LAYOUTS.length - 1; i >= 0; i--) if (LAYOUTS[i].姓名 === name && LAYOUTS[i].歸屬 === key) LAYOUTS.splice(i, 1);
+  blocks.forEach(bk => LAYOUTS.push(Object.assign(bk, { 建立者: USER })));
+  TOUCHED.add(name + "|" + key);
+  const where = isOV(key) ? "總覽" : itemLabel(items.find(i => i.key === key) || { date: "", kind: "" });
+  view.libSel = []; render(); persist([{ op: "layouts", name, key, blocks }], `已放 ${ids.length} 張到 ${where}`);
+}
+function libThumb() {
+  const { scope, name } = libContext(), id = view.libSel[0];
+  let rec = scope === "o" ? DATA.opatients.find(x => x.姓名 === name) : DATA.patients.find(x => x.姓名 === name);
+  if (!rec && scope === "o") { rec = { ID: uid("Q"), 姓名: name, 建立者: USER }; DATA.opatients.push(rec); }
+  rec.縮圖 = id; view.libSel = []; render();
+  persist([{ op: "put", type: scope === "o" ? "opatients" : "patients", rec }], "已設為小卡縮圖");
+}
+function libEdit() {
+  const { scope, name } = libContext(), ids = view.libSel.slice(), first = photoMeta(PHOTOS.find(p => p.id === ids[0]));
+  openSheet(`改日期／分類（${ids.length} 張）`, `<div class="fgrid">
+      <label class="f"><span>日期（空白＝不改）</span><input id="led" type="date" value="${ids.length === 1 ? first.date || "" : ""}"></label>
+      <label class="f"><span>分類（空白＝不改）</span><select id="lec"><option value="">—</option>${UP_LABELS.map(l => `<option ${ids.length === 1 && l === first.cat ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
+    <p class="hint">只改網頁上的日期和分類，雲端硬碟的檔名不會變，已經放好的位置也不會動。</p>`,
+    `<span class="left"><span class="err" id="ferr"></span></span><button class="btn" data-act="close">取消</button><button class="btn primary" data-act="lib-edit-save">儲存</button>`);
+  UP = { libEdit: { scope, name, ids } };
+}
+function libEditSave() {
+  const { scope, name, ids } = UP.libEdit, d = $("#led").value, c = $("#lec").value, ops = [];
+  ids.forEach(id => {
+    let r = DATA.photoinfo.find(x => x.ID === id);
+    if (!r) { r = { ID: id, 姓名: name, 範圍: scope, 建立者: USER }; DATA.photoinfo.push(r); }
+    if (d) r.日期 = d; if (c) r.分類 = c;
+    ops.push({ op: "put", type: "photoinfo", rec: r });
+  });
+  UP = null; view.libSel = []; closeSheet(); derive(); render(); persist(ops, "已更新照片資訊");
 }
 
 /* ---------- other surgeries (陳昶宇、黃敏琪) ---------- */
-const otherNames = () => [...new Set(DATA.others.concat(DATA.oplans, DATA.oevents).map(r => r.姓名))];
-const otherCase = name => ({ name, surgs: DATA.others.filter(r => r.姓名 === name).sort((a, b) => a.日期 < b.日期 ? -1 : 1),
+const otherNames = () => [...new Set(DATA.opatients.concat(DATA.others, DATA.oplans, DATA.oevents).map(r => r.姓名))];
+const otherCase = name => ({ name, p: DATA.opatients.find(r => r.姓名 === name), surgs: DATA.others.filter(r => r.姓名 === name).sort((a, b) => a.日期 < b.日期 ? -1 : 1),
   plans: DATA.oplans.filter(r => r.姓名 === name), evs: DATA.oevents.filter(r => r.姓名 === name) });
 const oLabel = n => peer ? "Case O" + String(otherNames().indexOf(n) + 1).padStart(2, "0") : n;
-const OCATS = [["plan", "術前規劃"], ["surg", "手術"], ["comp", "併發症"], ["visit", "回診"]];
+const OCATS = [["plan", "術前規劃"], ["surg", "治療"], ["comp", "併發症"], ["visit", "回診"]];
+const otypes = oc => [...new Set(oc.surgs.flatMap(s => listOf(s.類型)))];
 function otherItems(oc) {
   return oc.plans.map(r => ({ key: "XP|" + r.ID, kind: "XP", date: r.日期, o: -1, rec: r, isPlan: true }))
     .concat(oc.surgs.map(r => ({ key: "XS|" + r.ID, kind: "XS", date: r.日期, o: 0, rec: r, isSurg: true })),
@@ -1537,20 +1791,21 @@ const oPlanSurgery = pl => pl.對應手術日期 || DATA.others.filter(s => s.�
 function otherListView() {
   const q = view.oq.toLowerCase();
   const cases = otherNames().map(otherCase).filter(oc => {
-    if (view.oFilter !== "全部" && !oc.surgs.some(s => s.類型 === view.oFilter)) return false;
+    if (view.oFilter !== "全部" && !otypes(oc).includes(view.oFilter)) return false;
     if (q && ![oc.name].concat(oc.surgs.map(s => `${s.診斷} ${s.部位} ${s.類型}`)).join(" ").toLowerCase().includes(q)) return false;
     return true;
   }).map(oc => Object.assign(oc, { last: otherItems(oc).map(i => i.date).sort().pop() || "" })).sort((a, b) => a.last < b.last ? 1 : -1);
   return `
-    <p class="hint">其他手術只有「醫師」頁標記可看其他手術的醫師看得到，用來放照片和內部檢討。</p>
-    <div class="spread"><input id="oq" class="search" type="search" placeholder="${peer ? "搜尋 Case 編號" : "搜尋姓名、診斷或部位"}" value="${esc(view.oq)}" aria-label="搜尋" style="flex:1;min-width:200px">${peer ? "" : `<button class="btn primary" data-act="add-other">＋ 新增其他手術</button>`}</div>
+    <p class="hint">其他治療只有「醫師」頁標記可看其他手術的醫師看得到，用來放照片和內部檢討。</p>
+    <div class="spread"><input id="oq" class="search" type="search" placeholder="${peer ? "搜尋 Case 編號" : "搜尋姓名、診斷或部位"}" value="${esc(view.oq)}" aria-label="搜尋" style="flex:1;min-width:200px">${peer ? "" : `<button class="btn primary" data-act="add-other">＋ 新增病人</button>`}</div>
     <div class="chips">${["全部"].concat(OPT.其他類型).map(f => `<button class="chip" data-act="ofilter" data-f="${f}" aria-pressed="${view.oFilter === f}">${f}</button>`).join("")}</div>
-    <div class="list">${cases.length ? cases.map(oc => { const np = photosOf(oc.name, "o").length, last = oc.surgs[oc.surgs.length - 1] || {};
+    <div class="list cards">${cases.length ? cases.map(oc => { const last = oc.surgs[oc.surgs.length - 1] || {};
       const comp = oc.evs.filter(e => e.類型 !== "例行追蹤").length, rev = oc.surgs.filter(s => s.檢討).length + oc.evs.filter(e => e.檢討).length;
       const docs = [...new Set(oc.surgs.map(s => s.手術醫師))].filter(Boolean);
-      return `<button class="card" data-act="open-other" data-p="${esc(oc.name)}"><span class="name">${esc(oLabel(oc.name))}</span><span class="when">${oc.surgs[0] ? oc.surgs[0].日期 : oc.last}</span>
-        <span class="sub"><b style="color:var(--navy)">${esc([...new Set(oc.surgs.map(s => s.類型))].join("＋") || "尚未手術")}</b>${last.部位 ? " · " + esc(last.部位) : ""}${peer ? "" : " · " + esc(docs.join("、"))}</span><span class="sub">${esc(last.診斷 || "")}</span>
-        <span class="pills">${oc.surgs.length > 1 ? `<span class="pill">手術 ${oc.surgs.length} 次</span>` : ""}${oc.plans.length ? `<span class="pill">術前規劃</span>` : ""}${comp ? `<span class="pill warn">併發症 ${comp}</span>` : ""}${rev ? `<span class="pill warn">有檢討</span>` : ""}${np ? `<span class="pill">照片 ${np}</span>` : ""}</span></button>`; }).join("") : `<p class="empty">沒有符合的紀錄</p>`}</div>`;
+      return `<button class="card pc" data-act="open-other" data-p="${esc(oc.name)}">${cthumbHTML(oc.name, "o")}<span class="cbody">
+        <span class="row1"><span class="name">${esc(oLabel(oc.name))}</span>${otypes(oc).map(tp => `<span class="tag tg-other">${esc(tp)}</span>`).join("") || `<span class="tag sm tg-other">尚未治療</span>`}</span>
+        <span class="sub">${oc.surgs[0] ? oc.surgs[0].日期 : oc.last}${last.部位 ? " · " + esc(last.部位) : ""}${peer ? "" : " · " + esc(docs.join("、"))}</span><span class="sub">${esc(last.診斷 || "")}</span>
+        <span class="pills">${oc.surgs.length > 1 ? `<span class="pill">治療 ${oc.surgs.length} 次</span>` : ""}${oc.plans.length ? `<span class="pill">術前規劃</span>` : ""}${comp ? `<span class="pill warn">併發症 ${comp}</span>` : ""}${rev ? `<span class="pill warn">有檢討</span>` : ""}</span></span></button>`; }).join("") : `<p class="empty">沒有符合的紀錄</p>`}</div>`;
 }
 function otherParts(it, plan) {
   const r = it.rec, photos = (plan.blocks[it.key] || []).map((b, i) => blockHTML(b, `${it.key}#${i}`, false)).join("");
@@ -1559,34 +1814,107 @@ function otherParts(it, plan) {
   const review = v => v ? `<div class="review">${esc(v)}</div>` : "";
   if (it.kind === "XP") {
     const sd = oPlanSurgery(r), txt = [["規劃內容", r.規劃], ["考量與風險", r.考量]].filter(([, v]) => v);
-    return { cat: "plan", title: "Pre-op planning", loc: sd ? `手術 ${sd}` : "尚未手術", acts,
+    return { cat: "plan", title: "Pre-op planning", loc: sd ? `治療 ${sd}` : "尚未治療", acts,
       body: `${txt.length ? `<div class="ptext">${txt.map(([k, v]) => `<div><b>${k}</b><p>${esc(v)}</p></div>`).join("")}</div>` : ""}
         ${r.術後對照 ? `<div class="ptext"><div><b>術後實際與差異</b><div class="pr" style="display:block;border:0;padding:0"><div class="why">${esc(r.術後對照)}</div></div></div></div>` : sd ? `<p class="hint">術後可以按「編輯」補寫實際與規劃的差異。</p>` : ""}
         <span class="by">規劃：${esc(r.規劃醫師)}</span>${photos}` };
   }
-  if (it.kind === "XS") return { cat: "surg", title: esc(r.類型 || "手術"), loc: esc(r.部位 || ""), acts,
-    body: `${kv([["診斷", esc(r.診斷)], ["手術內容", esc(r.術式)], ["Surgeon", esc(r.手術醫師)]])}${review(r.檢討)}${photos}` };
+  if (it.kind === "XS") return { cat: "surg", title: listOf(r.類型).map(tp => `<span class="tag sm tg-other">${esc(tp)}</span>`).join(" ") || "治療", loc: esc(r.部位 || ""), acts,
+    body: `${kv([["診斷", esc(r.診斷)], ["治療內容", esc(r.術式)], ["醫師", esc(r.手術醫師)]])}${review(r.檢討)}${photos}` };
   return { cat: r.類型 === "例行追蹤" ? "visit" : "comp", title: esc(r.類型), loc: "", acts,
     body: `${kv([["發現", esc(r.發現)], ["處理", esc(r.處理)], ["記錄", esc(r.記錄醫師)]])}${review(r.檢討)}${photos}` };
 }
 function otherDetail(name) {
   const oc = otherCase(name), its = otherItems(oc), plan = photoPlanFor(name, "o", its);
   const items = its.slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.o - b.o);
-  const last = oc.surgs[oc.surgs.length - 1] || {};
+  const last = oc.surgs[oc.surgs.length - 1] || {}, p = oc.p || {};
   const ov = blocksFor(name, "XOV");
+  const fact = (k, v, flag) => v ? `<div><dt>${k}</dt><dd class="${flag ? "flag" : ""}">${esc(v)}</dd></div>` : "";
   return `
-    <button class="back" data-act="back-other">← 其他手術</button>
     <div class="case-head">
-      <div class="spread"><h2>${esc(oLabel(name))}</h2></div>
-      ${kv([["病歷號", peer ? "" : esc(last.病歷號 || "")], ["手術", esc(oc.surgs.map(s => `${s.日期} ${s.類型}`).join("、") || "尚未手術")], ["最近診斷", esc(last.診斷 || "")]])}
-      ${peer ? "" : `<div class="adds"><button class="btn sm" data-act="add-oplan">＋ 術前規劃</button><button class="btn sm" data-act="add-osurg">＋ 手術</button><button class="btn sm" data-act="add-oevent">＋ 追蹤／併發症</button>${ov.length ? "" : `<button class="btn sm" data-act="photos" data-key="XOV" data-name="${esc(name)}">＋ 總覽照片</button>`}${window.API ? `<button class="btn sm" data-act="upload" data-scope="o">＋ 上傳照片</button>` : ""}</div>`}
+      <div class="spread"><h2>${esc(oLabel(name))}</h2>${peer ? "" : `<button class="btn sm" data-act="${oc.p ? "edit" : "add-opat"}" data-type="opatients" data-id="${oc.p ? oc.p.ID : ""}">編輯基本資料</button>`}</div>
+      <div class="row1" style="display:flex;gap:6px;flex-wrap:wrap">${otypes(oc).map(tp => `<span class="tag tg-other">${esc(tp)}</span>`).join("")}</div>
+      <dl class="facts">
+        ${p.主訴 ? `<div class="wide"><dt>主訴</dt><dd>${esc(p.主訴)}</dd></div>` : ""}
+        ${peer ? "" : fact("病歷號", p.病歷號 || last.病歷號)}${fact("性別", p.性別)}${fact("全身病史", p.全身病史, p.全身病史 && p.全身病史 !== "無")}
+        ${fact("抽菸", p.抽菸, p.抽菸 && !["否", "已戒"].includes(p.抽菸))}${fact("糖尿病", (p.糖尿病 || "") + (p.HbA1c ? ` · HbA1c ${p.HbA1c}%` : ""), p.糖尿病 && p.糖尿病 !== "無")}
+        ${fact("治療", oc.surgs.map(s => `${s.日期} ${listOf(s.類型).join("＋")}`).join("、") || "尚未治療")}${fact("最近診斷", last.診斷)}
+        ${p.備註 ? `<div class="wide"><dt>備註</dt><dd>${esc(p.備註)}</dd></div>` : ""}
+      </dl>
+      ${peer ? "" : `<div class="adds"><button class="btn sm" data-act="add-oplan">＋ 術前規劃</button><button class="btn sm" data-act="add-osurg">＋ 治療</button><button class="btn sm" data-act="add-oevent">＋ 追蹤／併發症</button>${ov.length ? "" : `<button class="btn sm" data-act="photos" data-key="XOV" data-name="${esc(name)}">＋ 總覽照片</button>`}</div>`}
     </div>
     ${ov.length ? `<section class="block"><div class="spread"><h3>總覽</h3>${peer ? "" : `<button class="btn ghost sm" data-act="photos" data-key="XOV" data-name="${esc(name)}">編輯照片</button>`}</div>
       ${ov.map((b, i) => blockHTML(b, "XOV#" + i, false)).join("")}</section>` : ""}
     ${timelineSection(items.map(it => ({ it, x: otherParts(it, plan) })), OCATS, view.ocats, "ocat")}
-    ${plan.unassigned.length ? `<section class="block"><h3>未歸類照片</h3>
-      <p class="hint">這些照片的日期對不到任何紀錄。按任一筆紀錄的「照片」就能把它們加進去。</p>
-      <div class="tray">${plan.unassigned.map(id => thumbHTML(id)).join("")}</div></section>` : ""}`;
+    ${libraryHTML(name, "o", its, plan)}`;
+}
+
+/* ---------- monthly history (admin) ---------- */
+function monthlyCases() {
+  const by = {};
+  DATA.implants.forEach(i => { const k = i.姓名 + "|" + i.手術日期; (by[k] = by[k] || { name: i.姓名, date: i.手術日期, imps: [] }).imps.push(i); });
+  return Object.values(by).map(c => Object.assign(c, { month: c.date.slice(0, 7), full: c.imps.some(i => FULL(i.術式)), re: c.imps.every(i => i.術式 === "重植") })).sort((a, b) => a.date < b.date ? -1 : 1);
+}
+function monthsBetween(a, b) { const out = []; let [y, m] = a.split("-").map(Number); const [y2, m2] = b.split("-").map(Number); while (y < y2 || (y === y2 && m <= m2)) { out.push(`${y}-${String(m).padStart(2, "0")}`); m++; if (m > 12) { m = 1; y++; } } return out; }
+function monthlyHTML() {
+  const cases = monthlyCases();
+  if (!cases.length) return `<section class="block"><h3>每月案例</h3><p class="hint">還沒有手術紀錄。</p></section>`;
+  const months = monthsBetween(cases[0].month, today().slice(0, 7));
+  const rows = months.map(m => { const cs = cases.filter(c => c.month === m); return { m, imp: cs.filter(c => !c.full).length, allx: cs.filter(c => c.full).length, n: cs.reduce((a, c) => a + c.imps.length, 0) }; });
+  let cum = 0, cumI = 0; rows.forEach(r => { cum += r.imp + r.allx; cumI += r.n; r.cum = cum; r.cumI = cumI; });
+  const W = Math.max(640, months.length * 34 + 70), H = 220, L = 34, R = 40, T = 14, B = 36, iw = W - L - R, ih = H - T - B;
+  const maxM = Math.max(2, ...rows.map(r => r.imp + r.allx)), maxC = Math.max(2, cum), bw = Math.min(22, iw / months.length * .62);
+  const x = i => L + (i + .5) * (iw / months.length), yM = v => T + ih - v / maxM * ih, yC = v => T + ih - v / maxC * ih;
+  const ticks = [...new Set([0, Math.ceil(maxM / 2), maxM])];
+  const svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="每月案例數與累積數">
+    ${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${yM(v)}" y2="${yM(v)}" stroke="var(--hair)"/><text x="${L - 6}" y="${yM(v) + 3}" text-anchor="end">${v}</text>`).join("")}
+    <text x="${W - R + 6}" y="${yC(cum) + 3}" style="fill:var(--orange-deep)">${cum}</text>
+    ${rows.map((r, i) => `<g class="bar" data-act="month" data-m="${r.m}"><rect x="${x(i) - iw / months.length / 2}" y="${T}" width="${iw / months.length}" height="${ih}" fill="${view.month === r.m ? "var(--panel)" : "transparent"}"/>
+      ${r.imp ? `<rect x="${x(i) - bw / 2}" y="${yM(r.imp)}" width="${bw}" height="${ih - (yM(r.imp) - T)}" rx="2" fill="var(--navy)"/>` : ""}
+      ${r.allx ? `<rect x="${x(i) - bw / 2}" y="${yM(r.imp + r.allx)}" width="${bw}" height="${yM(r.imp) - yM(r.imp + r.allx)}" rx="2" fill="var(--orange)"/>` : ""}
+      ${(i % Math.ceil(months.length / 18) === 0 || r.m.endsWith("-01")) ? `<text x="${x(i)}" y="${H - B + 14}" text-anchor="middle">${r.m.slice(5) === "01" || i === 0 ? r.m.slice(2, 4) + "/" : ""}${+r.m.slice(5)}</text>` : ""}</g>`).join("")}
+    <polyline fill="none" stroke="var(--orange-deep)" stroke-width="1.6" stroke-dasharray="4 3" points="${rows.map((r, i) => `${x(i)},${yC(r.cum)}`).join(" ")}"/>
+    ${rows.map((r, i) => `<circle cx="${x(i)}" cy="${yC(r.cum)}" r="2.2" fill="var(--orange-deep)"/>`).join("")}
+  </svg>`;
+  const sel = view.month && rows.find(r => r.m === view.month) ? view.month : null;
+  const list = sel ? cases.filter(c => c.month === sel) : [];
+  const tot = { imp: cases.filter(c => !c.full).length, allx: cases.filter(c => c.full).length, n: cases.reduce((a, c) => a + c.imps.length, 0) };
+  return `<section class="block"><div class="spread"><h3>每月案例</h3><span class="hint">累積 ${tot.imp + tot.allx} 例（植牙 ${tot.imp}、All-on-X ${tot.allx}）· 植體 ${tot.n} 顆</span></div>
+    <div class="mleg"><span><i style="background:var(--navy)"></i>植牙（單顆／局部／重植）</span><span><i style="background:var(--orange)"></i>All-on-X</span><span><i style="background:none;border-top:2px dashed var(--orange-deep);height:0;border-radius:0"></i>累積案例數</span><span>點月份看當月病例</span></div>
+    <div class="chart-m">${svg}</div>
+    ${sel ? `<div class="spread"><b>${sel.replace("-", " 年 ")} 月：${list.length} 例，植體 ${list.reduce((a, c) => a + c.imps.length, 0)} 顆</b><button class="btn ghost sm" data-act="month" data-m="">收起</button></div>
+      <div class="mlist">${list.map(c => `<button data-act="open" data-p="${esc(c.name)}"><span class="mono">${c.date}</span><span>${esc(label(c.name))} <small class="hint">${c.imps.map(i => i.部位).join(" ")}</small></span>${tagHTML(c.full ? "All-on-X" : c.imps[0].術式, 1)}</button>`).join("") || `<p class="hint" style="padding:8px 12px">這個月沒有手術。</p>`}</div>` : ""}
+  </section>`;
+}
+
+/* ---------- reviews (admin) ---------- */
+function reviewItems() {
+  const out = [];
+  const add = (kind, scope, name, date, where, doc, text, extra) => { if (text && String(text).trim()) out.push({ kind, scope, name, date: date || "", where: where || "", doc: doc || "", text: String(text), extra: extra || "" }); };
+  DATA.implants.forEach(i => add("植體", "i", i.姓名, i.手術日期, `${i.部位} · ${en(i.術式)}`, i.手術醫師, i.植入檢討, i._failed ? "Failed" : ""));
+  DATA.events.forEach(e => { const et = ET()[e.類型] || {}; add(et.程度 === "Survival" ? "失敗" : et.程度 === "Success" ? "併發症" : "追蹤", "i", e.姓名, e.日期, `${e.部位 || "整口"} · ${en(e.類型)}`, e.記錄醫師, e.檢討, e.可能原因); });
+  DATA.planSites.forEach(s => { const pl = DATA.plans.find(p => p.ID === s.規劃ID); if (pl) add("規劃差異", "i", pl.姓名, pl.日期, `${s.部位}`, pl.規劃醫師, s.差異原因); });
+  PROS.forEach(p => add(p._stage === "Final" ? "正式假牙" : "臨時假牙", "i", p.姓名, p.交付日期, p.牙弓部位, p.假牙醫師, p.備註));
+  if (canOther()) {
+    DATA.others.forEach(r => add("其他治療", "o", r.姓名, r.日期, `${listOf(r.類型).join("＋")}${r.部位 ? " · " + r.部位 : ""}`, r.手術醫師, r.檢討));
+    DATA.oevents.forEach(r => add("其他治療", "o", r.姓名, r.日期, r.類型, r.記錄醫師, r.檢討));
+    DATA.oplans.forEach(r => add("其他治療", "o", r.姓名, r.日期, "術前規劃 · 術後對照", r.規劃醫師, r.術後對照));
+  }
+  return out.sort((a, b) => a.date < b.date ? 1 : -1);
+}
+const RV_KINDS = ["植體", "失敗", "併發症", "追蹤", "規劃差異", "臨時假牙", "正式假牙", "其他治療"];
+function reviewView() {
+  if (!isAdmin()) return `<p class="empty">檢討只有管理者看得到。</p>`;
+  const all = reviewItems(), f = view.rv, q = f.q.toLowerCase();
+  const docs = [...new Set(all.map(r => r.doc).filter(Boolean))].sort(), years = [...new Set(all.map(r => r.date.slice(0, 4)).filter(Boolean))].sort().reverse();
+  const rows = all.filter(r => (!f.kinds.length || f.kinds.includes(r.kind)) && (!f.doc || r.doc === f.doc) && (!f.year || r.date.startsWith(f.year)) &&
+    (!q || [r.name, r.text, r.where, r.extra].join(" ").toLowerCase().includes(q)));
+  return `<div class="spread"><h2 style="margin:0;font-family:var(--serif)">檢討</h2><span class="hint">${rows.length} / ${all.length} 則</span></div>
+    <div class="chips">${RV_KINDS.filter(k => all.some(r => r.kind === k)).map(k => `<button class="chip" data-act="rv-kind" data-k="${k}" aria-pressed="${f.kinds.includes(k)}">${k} <small>${all.filter(r => r.kind === k).length}</small></button>`).join("")}</div>
+    <div class="rvf"><select id="rvdoc" aria-label="醫師"><option value="">所有醫師</option>${docs.map(d => `<option ${d === f.doc ? "selected" : ""}>${esc(d)}</option>`).join("")}</select>
+      <select id="rvyear" aria-label="年份"><option value="">所有年份</option>${years.map(y => `<option ${y === f.year ? "selected" : ""}>${y}</option>`).join("")}</select>
+      <input id="rvq" class="search" type="search" placeholder="搜尋內容、姓名、原因" value="${esc(f.q)}" style="flex:1;min-width:180px"></div>
+    <div class="rv">${rows.map(r => `<div class="rvi"><div class="h"><span class="mono">${r.date}</span><b data-act="${r.scope === "o" ? "open-other" : "open"}" data-p="${esc(r.name)}">${esc(r.scope === "o" ? oLabel(r.name) : label(r.name))}</b><span class="pill ${["失敗", "併發症"].includes(r.kind) ? "warn" : ""}">${r.kind}</span><span>${esc(r.where)}</span>${r.extra ? `<span class="pill">${esc(r.extra)}</span>` : ""}<span>${esc(r.doc)}</span></div><p>${esc(r.text)}</p></div>`).join("") || `<p class="empty">沒有符合的檢討</p>`}</div>`;
 }
 
 /* ---------- statistics (admin only) ---------- */
@@ -1660,6 +1988,7 @@ function statsView() {
       return `<td>${s.n ? `<span class="cell"><b>n=${s.n}</b><span>Surv ${pct(s.surv)}</span><span>Succ ${pct(s.succR)}</span></span>` : `<span class="hint">—</span>`}</td>`; }).join("")}</tr>`).join("")}</tbody></table>`;
   }
   return `
+    ${SS.kind === "implant" ? monthlyHTML() : ""}
     <div class="spread"><div class="seg" role="group" aria-label="統計對象"><button data-act="ss-kind" data-k="implant" aria-pressed="${SS.kind === "implant"}">植體</button><button data-act="ss-kind" data-k="pros" aria-pressed="${SS.kind === "pros"}">假牙</button></div>
       <span class="hint">只有管理者看得到這一頁</span></div>
     <div class="kpis">
@@ -1684,24 +2013,53 @@ function statsView() {
 function render() {
   $("#who").innerHTML = `<b>${esc(USER)}</b> · ${isAdmin() ? "管理者" : "醫師"}${window.API ? ` <button class="btn ghost sm" data-act="logout">登出</button>` : ""}`;
   const tab = (k, l) => `<button class="tab" role="tab" data-act="tab" data-t="${k}" aria-selected="${view.tab === k}">${l}</button>`;
-  $("#tabs").innerHTML = tab("cases", "植牙病例") + (canOther() && !peer ? tab("other", "其他手術") : "") + (isAdmin() && !peer ? tab("stats", "統計") : "");
+  $("#tabs").innerHTML = tab("cases", "植牙病例") + (canOther() && !peer ? tab("other", "其他治療") : "") + (isAdmin() && !peer ? tab("stats", "統計") + tab("review", "檢討") : "");
+  if (view.tab === "review" && (!isAdmin() || peer)) view.tab = "cases";
   if (view.tab === "other" && (!canOther() || peer)) view.tab = "cases";
   $("#peer").setAttribute("aria-checked", peer);
   if (view.tab === "stats" && (!isAdmin() || peer)) view.tab = "cases";
   if (view.patient && !canSee(view.patient)) view.patient = null;
-  if (view.other && !otherNames().includes(view.other)) view.other = null;
-  $("#app").innerHTML = view.tab === "stats" ? statsView() : view.tab === "other" ? (view.other ? otherDetail(view.other) : otherListView()) : view.patient ? detailView(view.patient) : listView();
+  if (view.other && (!otherNames().includes(view.other) || !canOther() || peer)) view.other = null;
+  $("#app").innerHTML = view.tab === "stats" ? statsView() : view.tab === "review" ? reviewView() : view.tab === "other" ? otherListView() : listView();
+  renderModal();
   if (window.API) window.API.afterRender();
   const oq = $("#oq");
   if (oq) oq.addEventListener("input", e => { view.oq = e.target.value.trim(); const pos = e.target.selectionStart; render(); const n = $("#oq"); n.focus(); n.setSelectionRange(pos, pos); });
   const q = $("#q");
   if (q) q.addEventListener("input", e => { view.q = e.target.value.trim(); const pos = e.target.selectionStart; render(); const nq = $("#q"); nq.focus(); nq.setSelectionRange(pos, pos); });
   const as = $("#asuser"); if (as) as.addEventListener("change", e => { USER = e.target.value; store.set("demoUser", USER); view.patient = null; render(); });
+  const rvq = $("#rvq");
+  if (rvq) rvq.addEventListener("input", e => { view.rv.q = e.target.value; const pos = e.target.selectionStart; render(); const n = $("#rvq"); n.focus(); n.setSelectionRange(pos, pos); });
+  [["#rvdoc", "doc"], ["#rvyear", "year"]].forEach(([s, k]) => { const el = $(s); if (el) el.addEventListener("change", e => { view.rv[k] = e.target.value; render(); }); });
   const g1 = $("#g1"), g2 = $("#g2");
   if (g1) g1.addEventListener("change", e => { SS.g1 = e.target.value; if (SS.g2 === SS.g1) SS.g2 = ""; store.set("ss", SS); render(); });
   if (g2) g2.addEventListener("change", e => { SS.g2 = e.target.value; store.set("ss", SS); render(); });
 }
 const recById = (type, id) => DATA[type].find(r => r.ID === id);
+let modalFor = null;
+function renderModal() {
+  const M = $("#modal"), key = view.patient ? "i|" + view.patient : view.other ? "o|" + view.other : null;
+  if (!key) { if (M.innerHTML) M.innerHTML = ""; modalFor = null; if (!$(".sheet")) document.body.style.overflow = ""; return; }
+  const body = $(".mbody", M), keep = modalFor === key && body ? body.scrollTop : 0;
+  const det = view.patient ? detailView(view.patient) : otherDetail(view.other);
+  M.innerHTML = `<div class="mscrim" data-act="mclose-bg"><div class="modal" role="dialog" aria-modal="true" aria-label="病例"><div class="mhead"><b>${esc(view.patient ? label(view.patient) : oLabel(view.other))}</b><button class="btn sm" data-act="mclose">✕ 關閉</button></div><div class="mbody">${det}</div></div></div>`;
+  $(".mbody", M).scrollTop = keep;
+  modalFor = key;
+  document.body.style.overflow = "hidden";
+}
+function openCase(scope, name) {
+  if (scope === "o") { view.other = name; view.patient = null; view.ocats = []; } else { view.patient = name; view.other = null; view.site = null; view.cats = []; }
+  view.libSel = []; view.libOpen = false;
+  try { history.pushState({ m: 1 }, ""); } catch (e) {}
+  render();
+  if (window.API) window.API.ensurePhotos(name, scope);
+}
+function closeCase(fromPop) {
+  view.patient = null; view.other = null; view.libSel = [];
+  render();
+  if (!fromPop) { try { if (history.state && history.state.m) history.back(); } catch (e) {} }
+}
+window.addEventListener("popstate", () => { if (view.patient || view.other) { closeSheet(); closeCase(true); } });
 document.addEventListener("click", e => {
   const a = e.target.closest("[data-act]"); if (!a) return;
   const act = a.dataset.act, sheet = $(".sheet");
@@ -1724,12 +2082,24 @@ document.addEventListener("click", e => {
     case "add-plan": openPlanForm(null); return;
     case "edit-plan": openPlanForm(DATA.plans.find(p => p.ID === a.dataset.id)); return;
     case "ofilter": view.oFilter = a.dataset.f; render(); return;
-    case "open-other": view.other = a.dataset.p; view.ocats = []; render(); window.scrollTo(0, 0); if (window.API) window.API.ensurePhotos(view.other, "o"); return;
-    case "back-other": view.other = null; render(); return;
-    case "add-other": view.other = null; openRecordForm("others"); return;
+    case "open-other": openCase("o", a.dataset.p); return;
+    case "back-other": closeCase(); return;
+    case "mclose": closeCase(); return;
+    case "mclose-bg": if (e.target === a) closeCase(); return;
+    case "add-opat": openRecordForm("opatients"); return;
+    case "mchip": if (!a.disabled) a.setAttribute("aria-pressed", a.getAttribute("aria-pressed") !== "true"); return;
+    case "lib-pick": { const id = a.dataset.ph, s = view.libSel; view.libSel = s.includes(id) ? s.filter(x => x !== id) : s.concat(id); view.libOpen = true; render(); return; }
+    case "lib-clear": view.libSel = []; render(); return;
+    case "lib-add": libAdd(); return;
+    case "lib-thumb": libThumb(); return;
+    case "lib-edit": libEdit(); return;
+    case "lib-edit-save": libEditSave(); return;
+    case "month": view.month = a.dataset.m || null; render(); return;
+    case "rv-kind": { const k = a.dataset.k; view.rv.kinds = view.rv.kinds.includes(k) ? view.rv.kinds.filter(x => x !== k) : view.rv.kinds.concat(k); render(); return; }
+    case "add-other": view.other = null; openRecordForm("opatients"); return;
     case "filter": view.filter = a.dataset.f; render(); return;
-    case "open": view.patient = a.dataset.p; view.site = null; view.cats = []; render(); window.scrollTo(0, 0); if (window.API) window.API.ensurePhotos(view.patient, "i"); return;
-    case "back": view.patient = null; render(); return;
+    case "open": if (view.tab === "other") view.tab = "cases"; openCase("i", a.dataset.p); return;
+    case "back": closeCase(); return;
     case "site": { const n = +a.dataset.site; view.site = view.site === n ? null : n; const c = caseOf(view.patient); $("#chart").innerHTML = chartHTML(c); $("#site").innerHTML = sitePanel(c, view.site); return; }
     case "add-patient": view.patient = null; openRecordForm("patients"); return;
     case "add-surgery": openSurgeryForm(); return;
@@ -1807,7 +2177,8 @@ document.addEventListener("pointermove", e => {
 document.addEventListener("pointerup", () => { drag = null; });
 document.addEventListener("pointercancel", () => { drag = null; });
 let rw; window.addEventListener("resize", () => { clearTimeout(rw); rw = setTimeout(() => { if (view.patient && $("#chart")) $("#chart").innerHTML = chartHTML(caseOf(view.patient)); }, 150); });
-document.addEventListener("keydown", e => { if (e.key === "Escape") { const lb = $(".lb"); if (lb) lb.remove(); else if ($(".sheet")) { closeSheet(); ED = null; } } });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { const lb = $(".lb"); if (lb) lb.remove(); else if ($(".sheet")) { closeSheet(); ED = null; UP = null; } else if (view.patient || view.other) closeCase(); } });
+document.addEventListener("toggle", e => { if (e.target.matches && e.target.matches("details[data-lib]")) view.libOpen = e.target.open; }, true);
 
 if (window.API) window.API.boot(); else { derive(); render(); }
 </script>
