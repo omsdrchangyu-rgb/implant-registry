@@ -168,7 +168,13 @@ path { stroke-linejoin: round; stroke-linecap: round; }
 .hint { font-size: 12.5px; color: var(--muted); margin: 0; }
 
 /* timeline */
-.cats { display: flex; flex-wrap: wrap; gap: 2px 4px; font-size: 12px; color: var(--muted); align-items: center; }
+.tl-bar { display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; }
+.tl-bar h3 { flex: none; }
+.cats { display: flex; flex-wrap: nowrap; gap: 2px; font-size: 12px; color: var(--muted); align-items: center; min-width: 0; overflow-x: auto; scrollbar-width: none; margin-left: auto; }
+.cats::-webkit-scrollbar { display: none; }
+.cats button { flex: none; white-space: nowrap; }
+.cats button.all::before { display: none; }
+.cats.filtering button.all[aria-pressed] { opacity: 1; }
 .cats button { border: 0; background: none; padding: 3px 7px; font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px; }
 .cats button[aria-pressed="true"] { background: var(--panel); color: var(--ink); font-weight: 500; }
 .cats.filtering button[aria-pressed="false"] { opacity: .45; }
@@ -504,14 +510,14 @@ window.REG_CONFIG = {
     } catch (err) { loaded[k] = false; if (err.message !== "AUTH") toast("照片清單讀取失敗：" + err.message); }
   }
 
-  const URLS = {}, PENDING = {}, QUEUE = [];
+  const URLS = {}, PENDING = {}, QUEUE = [], FAILED_AT = {};
   let active = 0;
   const cacheKey = id => "https://photo-cache.local/" + id;
   async function fromCache(id) {
-    try { const c = await caches.open("reg-photos"); const r = await c.match(cacheKey(id)); return r ? await r.blob() : null; } catch (e) { return null; }
+    try { const c = await caches.open("reg-photos-v2"); const r = await c.match(cacheKey(id)); return r ? await r.blob() : null; } catch (e) { return null; }
   }
   async function toCache(id, blob) {
-    try { const c = await caches.open("reg-photos"); await c.put(cacheKey(id), new Response(blob)); } catch (e) {}
+    try { const c = await caches.open("reg-photos-v2"); await c.put(cacheKey(id), new Response(blob)); } catch (e) {}
   }
   function b64Blob(b64, mime) {
     const bin = atob(b64), arr = new Uint8Array(bin.length);
@@ -523,6 +529,10 @@ window.REG_CONFIG = {
       if (el.tagName === "IMG") el.src = URLS[id]; else el.style.backgroundImage = `url(${URLS[id]})`;
     });
   }
+  async function decodable(blob) {
+    try { const b = await createImageBitmap(blob); b.close && b.close(); return true; }
+    catch (e) { return new Promise(ok => { const im = new Image(), u = URL.createObjectURL(blob); im.onload = () => { URL.revokeObjectURL(u); ok(true); }; im.onerror = () => { URL.revokeObjectURL(u); ok(false); }; im.src = u; }); }
+  }
   function show(id, blob) { URLS[id] = URL.createObjectURL(blob); paint(id); }
   /* 先看手機裡有沒有存過；沒有的話，一次向伺服器要最多 6 張 */
   async function fetchBatch(ids) {
@@ -530,11 +540,13 @@ window.REG_CONFIG = {
     for (const id of ids) { const b = await fromCache(id); if (b) show(id, b); else need.push(id); }
     if (!need.length) return;
     const out = await call("photoBatch", { ids: need });
-    need.forEach(id => {
+    for (const id of need) {
       const r = out.photos[id];
-      if (!r || r.error) { PENDING[id] = "failed"; return; }
-      const blob = b64Blob(r.data, r.mime); toCache(id, blob); show(id, blob);
-    });
+      if (!r || r.error || !r.data) { PENDING[id] = "failed"; continue; }
+      const blob = b64Blob(r.data, String(r.mime || "").indexOf("image/") === 0 ? r.mime : "image/jpeg");
+      if (!(await decodable(blob))) { PENDING[id] = "failed"; continue; }   // 壞掉的資料不存進手機
+      toCache(id, blob); show(id, blob);
+    }
   }
   function pump() {
     while (active < 3 && QUEUE.length) {
@@ -544,7 +556,7 @@ window.REG_CONFIG = {
   }
   function photoSrc(id) {
     if (URLS[id]) return URLS[id];
-    if (!PENDING[id]) { PENDING[id] = true; QUEUE.push(id); setTimeout(pump, 0); }
+    if (!PENDING[id] || (PENDING[id] === "failed" && Date.now() - (FAILED_AT[id] || 0) > 20000)) { PENDING[id] = true; FAILED_AT[id] = Date.now(); QUEUE.push(id); setTimeout(pump, 0); }
     return PLACEHOLDER;
   }
 
@@ -1122,7 +1134,7 @@ const numv = (v, u) => v === "" || v == null ? "" : `${v} ${u}`;
 const CATS = [["surg", "手術"], ["plan", "術前規劃"], ["prov", "臨時假牙"], ["final", "正式假牙"], ["comp", "併發症"], ["fail", "失敗"], ["adj", "調整"], ["visit", "回診"]];
 function timelineSection(rows, cats, sel, act) {
   const shown = rows.filter(r => !sel.length || sel.includes(r.x.cat));
-  return `<section class="block"><div class="spread"><h3>病程</h3><div class="cats ${sel.length ? "filtering" : ""}" role="group" aria-label="只看特定種類">${cats.map(([k, l]) => `<button type="button" data-act="${act}" data-c="${k}" data-cat="${k}" aria-pressed="${sel.includes(k)}">${l}</button>`).join("")}${sel.length ? `<button type="button" class="btn ghost sm" data-act="${act}-clear">顯示全部</button>` : ""}</div></div>
+  return `<section class="block"><div class="tl-bar"><h3>病程</h3><div class="cats ${sel.length ? "filtering" : ""}" role="group" aria-label="只看特定種類"><button type="button" class="all" data-act="${act}-clear" aria-pressed="${!sel.length}">全部</button>${cats.map(([k, l]) => `<button type="button" data-act="${act}" data-c="${k}" data-cat="${k}" aria-pressed="${sel.includes(k)}">${l}</button>`).join("")}</div></div>
     ${shown.length ? `<ol class="timeline">${shown.map(r => tlHTML(r.it, r.x)).join("")}</ol>` : `<p class="hint">${rows.length ? "沒有這類紀錄。" : "還沒有任何紀錄。"}</p>`}</section>`;
 }
 function tlHTML(it, x) {
