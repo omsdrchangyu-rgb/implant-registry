@@ -106,6 +106,8 @@ main { padding-block: 18px 72px; display: flex; flex-direction: column; gap: 16p
 .list { display: flex; flex-direction: column; gap: 10px; }
 .list.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .card.pc { display: flex; flex-direction: column; padding: 0; overflow: hidden; gap: 0; }
+.card.pc .cthumb { display: block; width: 100%; min-height: 150px; background-position: center; background-size: cover; background-repeat: no-repeat; position: relative; }
+.card.pc .cthumb svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 .card.pc .cthumb { aspect-ratio: 16 / 10; background: var(--panel) center / cover no-repeat; display: grid; place-items: center; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--hair); }
 .card.pc .cthumb svg { opacity: .5; }
 .ph-fail { position: relative; }
@@ -125,7 +127,7 @@ main { padding-block: 18px 72px; display: flex; flex-direction: column; gap: 16p
 @media (max-width: 640px) {
   .list.cards { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .card.pc { flex-direction: row; }
-  .card.pc .cthumb { width: 112px; flex: none; aspect-ratio: auto; border-bottom: 0; border-right: 1px solid var(--hair); }
+  .card.pc .cthumb { width: 112px; min-height: 112px; flex: none; aspect-ratio: auto; align-self: stretch; border-bottom: 0; border-right: 1px solid var(--hair); }
   .card.pc .cbody { padding: 10px 12px; }
 }
 #modal:empty { display: none; }
@@ -1257,7 +1259,7 @@ function cardHTML(n) {
   const failN = c.imps.filter(i => i._failed).length;
   const comp = c.evs.filter(e => ET()[e.類型]?.程度 === "Success").length;
   const docs = [...new Set(c.imps.map(i => i.手術醫師).concat(c.temps.concat(c.finals).map(t => t.假牙醫師), listOf(c.p.經手醫師)))].filter(Boolean);
-  return `<button class="card pc" data-act="open" data-p="${esc(n)}">
+  return `<div class="card pc" role="button" tabindex="0" data-act="open" data-p="${esc(n)}">
     ${cthumbHTML(n, "i")}
     <span class="cbody">
       <span class="row1"><span class="name">${esc(label(n))}</span>${types.length ? types.map(tp => tagHTML(tp)).join("") : `<span class="tag sm tg-other">尚無植體</span>`}</span>
@@ -1266,7 +1268,7 @@ function cardHTML(n) {
       <span class="pills">${failN ? `<span class="pill bad">Failed ${failN}</span>` : ""}${comp ? `<span class="pill warn">併發症 ${comp}</span>` : ""}
         <span class="pill">${c.finals.length ? "Final delivered" : c.temps.length ? "Provisional" : "—"}</span>
         ${c.p.抽菸 && !["否", "已戒"].includes(c.p.抽菸) ? `<span class="pill warn">抽菸</span>` : ""}${c.p.糖尿病 && c.p.糖尿病 !== "無" ? `<span class="pill warn">糖尿病${c.p.HbA1c ? " " + esc(c.p.HbA1c) + "%" : ""}</span>` : ""}${c.p.咬合力 === "強" ? `<span class="pill warn">咬合力強</span>` : ""}${c.p.夜磨牙 === "有" ? `<span class="pill warn">夜磨牙</span>` : ""}
-      </span></span></button>`;
+      </span></span></div>`;
 }
 
 /* ---------- case detail ---------- */
@@ -1875,10 +1877,10 @@ function otherListView() {
     <div class="list cards">${cases.length ? cases.map(oc => { const last = oc.surgs[oc.surgs.length - 1] || {};
       const comp = oc.evs.filter(e => e.類型 !== "例行追蹤").length, rev = oc.surgs.filter(s => s.檢討).length + oc.evs.filter(e => e.檢討).length;
       const docs = [...new Set(oc.surgs.map(s => s.手術醫師))].filter(Boolean);
-      return `<button class="card pc" data-act="open-other" data-p="${esc(oc.name)}">${cthumbHTML(oc.name, "o")}<span class="cbody">
+      return `<div class="card pc" role="button" tabindex="0" data-act="open-other" data-p="${esc(oc.name)}">${cthumbHTML(oc.name, "o")}<span class="cbody">
         <span class="row1"><span class="name">${esc(oLabel(oc.name))}</span>${otypes(oc).map(tp => `<span class="tag tg-other">${esc(tp)}</span>`).join("") || `<span class="tag sm tg-other">尚未治療</span>`}</span>
         <span class="sub">${oc.surgs[0] ? oc.surgs[0].日期 : oc.last}${last.部位 ? " · " + esc(last.部位) : ""}${peer ? "" : " · " + esc(docs.join("、"))}</span><span class="sub">${esc(last.診斷 || "")}</span>
-        <span class="pills">${oc.surgs.length > 1 ? `<span class="pill">治療 ${oc.surgs.length} 次</span>` : ""}${oc.plans.length ? `<span class="pill">術前規劃</span>` : ""}${comp ? `<span class="pill warn">併發症 ${comp}</span>` : ""}${rev ? `<span class="pill warn">有檢討</span>` : ""}</span></span></button>`; }).join("") : `<p class="empty">沒有符合的紀錄</p>`}</div>`;
+        <span class="pills">${oc.surgs.length > 1 ? `<span class="pill">治療 ${oc.surgs.length} 次</span>` : ""}${oc.plans.length ? `<span class="pill">術前規劃</span>` : ""}${comp ? `<span class="pill warn">併發症 ${comp}</span>` : ""}${rev ? `<span class="pill warn">有檢討</span>` : ""}</span></span></div>`; }).join("") : `<p class="empty">沒有符合的紀錄</p>`}</div>`;
 }
 function otherParts(it, plan) {
   const r = it.rec, photos = (plan.blocks[it.key] || []).map((b, i) => blockHTML(b, `${it.key}#${i}`, false)).join("");
@@ -1994,13 +1996,13 @@ function eduView() {
     <div class="list cards">${shown.map(s => { const sc = s.範圍 || "i", nm = s.姓名;
       const tagsH = listOf(s.標籤).map(g => `<span class="pill"># ${esc(g)}</span>`).join("");
       if (sc === "e") { const ph = firstPhotoIn(s);
-        return `<button class="card pc" data-act="art-open" data-id="${s.ID}">${ph ? `<span class="cthumb" data-src-ph="${ph}" style="background-image:url(${photoSrc(ph)})"></span>` : `<span class="cthumb">${TOOTH_ICON}</span>`}<span class="cbody">
+        return `<div class="card pc" role="button" tabindex="0" data-act="art-open" data-id="${s.ID}">${ph ? `<span class="cthumb" data-src-ph="${ph}" style="background-image:url(${photoSrc(ph)})"></span>` : `<span class="cthumb">${TOOTH_ICON}</span>`}<span class="cbody">
           <span class="row1"><span class="name">${esc(s.標題)}</span><span class="tag sm tg-partial">衛教文章</span></span>
-          <span class="sub">${esc(excerpt(s))}</span>${tagsH ? `<span class="pills">${tagsH}</span>` : ""}</span></button>`; }
-      return `<button class="card pc" data-act="${sc === "o" ? "open-other" : "open"}" data-p="${esc(nm)}" data-keep="1">${cthumbHTML(nm, sc)}<span class="cbody">
+          <span class="sub">${esc(excerpt(s))}</span>${tagsH ? `<span class="pills">${tagsH}</span>` : ""}</span></div>`; }
+      return `<div class="card pc" role="button" tabindex="0" data-act="${sc === "o" ? "open-other" : "open"}" data-p="${esc(nm)}" data-keep="1">${cthumbHTML(nm, sc)}<span class="cbody">
         <span class="row1"><span class="name">${esc(sc === "o" ? oLabel(nm) : label(nm))}</span>${catOf(s).map(c => sc === "o" ? `<span class="tag tg-other">${esc(c)}</span>` : tagHTML(c)).join("")}</span>
         ${s.標題 ? `<span class="sub" style="font-size:14.5px;color:var(--ink)">${esc(s.標題)}</span>` : ""}${tagsH ? `<span class="pills">${tagsH}</span>` : ""}
-        <span class="sub">${esc(excerpt(s))}</span></span></button>`; }).join("") || `<p class="empty">還沒有衛教案例。在病人視窗按「☆ 加入衛教案例」就會出現在這裡。</p>`}</div>`;
+        <span class="sub">${esc(excerpt(s))}</span></span></div>`; }).join("") || `<p class="empty">還沒有衛教案例。在病人視窗按「☆ 加入衛教案例」就會出現在這裡。</p>`}</div>`;
 }
 let STY = null;
 const EDU_NAME = "衛教";
@@ -2439,7 +2441,7 @@ document.addEventListener("pointermove", e => {
 document.addEventListener("pointerup", () => { drag = null; });
 document.addEventListener("pointercancel", () => { drag = null; });
 let rw; window.addEventListener("resize", () => { clearTimeout(rw); rw = setTimeout(() => { if (view.patient && $("#chart")) $("#chart").innerHTML = chartHTML(caseOf(view.patient)); }, 150); });
-document.addEventListener("keydown", e => { if (e.key === "Escape") { const lb = $(".lb"); if (lb) lb.remove(); else if ($(".sheet")) { closeSheet(); ED = null; UP = null; } else if (view.patient || view.other || view.article) closeCase(); } });
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches('[role="button"][data-act]')) { e.preventDefault(); e.target.click(); return; } if (e.key === "Escape") { const lb = $(".lb"); if (lb) lb.remove(); else if ($(".sheet")) { closeSheet(); ED = null; UP = null; } else if (view.patient || view.other || view.article) closeCase(); } });
 document.addEventListener("toggle", e => { if (e.target.matches && e.target.matches("details[data-lib]")) view.libOpen = e.target.open; }, true);
 
 if (window.API) window.API.boot(); else { derive(); render(); }
