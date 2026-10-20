@@ -68,6 +68,16 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .top-tools { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .who { font-size: 13px; color: var(--head-muted); }
 .who b { color: var(--head-ink); font-weight: 500; }
+.modes { display: inline-flex; background: rgba(255,255,255,.1); border-radius: 9px; padding: 2px; gap: 2px; }
+.modes button { border: 0; background: none; color: var(--head-muted); font-size: 12.5px; padding: 4px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+.modes button[aria-pressed="true"] { background: var(--card); color: var(--ink); font-weight: 500; }
+body.consult .review, body.consult .why, body.consult .rvx, body.consult .tgl { display: none !important; }
+.blurbox { position: absolute; border-radius: 10px; backdrop-filter: blur(18px) saturate(.6); -webkit-backdrop-filter: blur(18px) saturate(.6); background: rgba(120,120,120,.18); z-index: 2; pointer-events: none; }
+.editing .blurbox { z-index: 6; pointer-events: auto; cursor: move; outline: 2px dashed var(--orange); touch-action: none; }
+.blurbox .rz { position: absolute; right: -7px; bottom: -7px; width: 18px; height: 18px; border-radius: 50%; background: var(--orange); border: 2px solid #fff; cursor: nwse-resize; }
+.blurbox .bx { position: absolute; right: -9px; top: -9px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: var(--ink); color: var(--bg); font-size: 12px; line-height: 22px; padding: 0; cursor: pointer; }
+.pblock { position: relative; }
+.pb-deid { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); z-index: 3; }
 .peer { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--head-muted); cursor: pointer; user-select: none; white-space: nowrap; }
 .switch { width: 38px; height: 22px; border-radius: 11px; background: rgba(255,255,255,.22); position: relative; border: 0; padding: 0; cursor: pointer; flex: none; }
 .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; }
@@ -448,7 +458,7 @@ details.filters summary::-webkit-details-marker { display: none; }
       <div class="brand"><h1>植牙病例</h1><small>LIFE OMS DENTAL CLINIC</small></div>
       <div class="top-tools">
         <span class="who" id="who"></span>
-        <label class="peer" for="peer">分享給同儕<button id="peer" class="switch" role="switch" aria-checked="false" aria-label="同儕模式：隱藏姓名"></button></label>
+        <div class="modes" role="group" aria-label="顯示模式"><button type="button" data-act="mode" data-m="full">完整</button><button type="button" data-act="mode" data-m="peer">同儕</button><button type="button" data-act="mode" data-m="consult">諮詢</button></div>
       </div>
     </div>
     <nav class="tabs" role="tablist" id="tabs"></nav>
@@ -644,16 +654,19 @@ window.REG_CONFIG = {
     return await new Promise(ok => cv.toBlob(ok, "image/jpeg", 0.88));
   }
   const blobB64 = blob => new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = bad; r.readAsDataURL(blob); });
-  /* 用 XHR 上傳才看得到進度；一次傳兩張 */
-  function postWithProgress(body, onProg) {
-    return new Promise((ok, bad) => {
-      const x = new XMLHttpRequest();
-      x.open("POST", CFG.API_URL);
-      x.upload.onprogress = e => { if (e.lengthComputable) onProg(e.loaded / e.total); };
-      x.onload = () => { try { const out = JSON.parse(x.responseText); if (!out.ok) { if (out.error === "AUTH") { session = null; ls.del(SKEY); showLogin("登入已過期，請重新登入。"); } bad(new Error(out.error || "上傳失敗")); } else ok(out); } catch (e) { bad(new Error("伺服器回應錯誤")); } };
-      x.onerror = () => bad(new Error("網路中斷"));
-      x.send(body);
-    });
+  /* Apps Script 不接受帶進度監聽的跨網域上傳（會先送 OPTIONS 被拒絕），所以用一般 fetch，進度依檔案大小估算 */
+  async function postWithProgress(body, onProg) {
+    const est = 1500 + body.length / 220;            // 約 220 KB/s 加 1.5 秒啟動
+    const t0 = Date.now(), timer = setInterval(() => onProg(Math.min(0.95, (Date.now() - t0) / est)), 200);
+    try {
+      let res;
+      try { res = await fetch(CFG.API_URL, { method: "POST", body }); }
+      catch (e) { throw new Error("網路中斷或伺服器沒有回應"); }
+      const out = await res.json().catch(() => { throw new Error("伺服器回應錯誤（" + res.status + "）"); });
+      if (!out.ok) { if (out.error === "AUTH") { session = null; ls.del(SKEY); showLogin("登入已過期，請重新登入。"); } throw new Error(out.error || "上傳失敗"); }
+      onProg(1);
+      return out;
+    } finally { clearInterval(timer); }
   }
   async function upload(name, scope, items, progress, onItem) {
     const n = items.length, frac = new Array(n).fill(0), res = new Array(n).fill(null), seen = {};
@@ -669,7 +682,7 @@ window.REG_CONFIG = {
         const out = await postWithProgress(body, f => { frac[i] = 0.1 + f * 0.8; tick(); });
         URLS[out.photo.id] = URL.createObjectURL(blob); toCache(out.photo.id, blob);
         res[i] = out.photo; onItem && onItem(i, true);
-      } catch (e) { onItem && onItem(i, false); }
+      } catch (e) { onItem && onItem(i, false, e.message || String(e)); }
       frac[i] = 1; done++; tick();
     }
     async function worker() { while (next < n) { const i = next++; await one(i); } }
@@ -762,7 +775,9 @@ const en = v => ET()[v]?.en || EN[v] || v;
 const angleInfo = s => { s = String(s || ""); const m = s.match(/(\d+)/); const deg = m ? +m[1] : 0; return { deg, dir: deg === 0 ? "軸向" : s.includes("近") ? "近心" : "遠心" }; };
 const angleEn = s => { const a = angleInfo(s); return a.deg === 0 ? "Axial" : `${a.dir === "近心" ? "Mesial" : "Distal"} ${a.deg}°`; };
 
-let peer = store.get("peer", false);
+let MODE = store.get("mode", store.get("peer", false) ? "peer" : "full");
+let peer = MODE !== "full";
+let consult = MODE === "consult";
 let view = { tab: "cases", patient: null, filter: "全部", q: "", site: null, cats: [], planCmp: [], other: null, oFilter: "全部", oq: "", ocats: [], libSel: [], libOpen: false, month: null, rv: { kinds: [], doc: "", year: "", q: "" } };
 const TAGCLS = { "單顆": "single", "多顆／局部": "partial", "All-on-X": "allx", "重植": "re" };
 const tagHTML = (tp, sm) => `<span class="tag ${sm ? "sm" : ""} tg-${TAGCLS[tp] || "other"}">${esc(en(tp))}</span>`;
@@ -1068,6 +1083,7 @@ const TOUCHED = new Set();
 const RATIOS = { "寬": "21 / 10", "標準": "4 / 3", "方形": "1 / 1", "直式": "3 / 4" };
 const LAYOUT_TYPES = ["單張", "並排", "上下", "九宮格", "比對"];
 const DEF_ADJ = { z: 1, x: 0, y: 0, r: 0, b: 100, c: 100 };
+const blurHTML = (a, editing, id) => (a.blur || []).map((r, i) => `<span class="blurbox" data-bl="${i}" data-ph="${id}" style="left:${r.x}%;top:${r.y}%;width:${r.w}%;height:${r.h}%">${editing ? `<i class="rz"></i><button type="button" class="bx" data-act="blur-del" data-ph="${id}" data-i="${i}" aria-label="移除這塊模糊">✕</button>` : ""}</span>`).join("");
 function timelineItems(c) {
   const items = [];
   const bySurg = {};
@@ -1126,7 +1142,7 @@ function mkBlock(name, key, type, ids) {
   const pano = ids.every(id => photoMeta(PHOTOS.find(p => p.id === id)).pano);
   return { ID: uid("L"), 姓名: name, 歸屬: key, 排版: type, 檔案: ids.slice(), 說明: "", 調整: { _ratio: pano && (type === "比對" || type === "單張" || type === "上下") ? "寬" : type === "九宮格" ? "方形" : "標準", _pos: 50 } };
 }
-const adjOf = (b, id) => Object.assign({}, DEF_ADJ, b.調整[id] || {});
+const adjOf = (b, id) => { const a = Object.assign({}, DEF_ADJ, b.調整[id] || {}); if (a.blur) a.blur = a.blur.map(r => Object.assign({}, r)); return a; };
 const imgStyle = a => `transform:translate(${a.x}%,${a.y}%) rotate(${a.r}deg) scale(${a.z});filter:brightness(${a.b}%) contrast(${a.c}%)`;
 function blockHTML(b, bi, editing, sel) {
   if (!editing) RENDERED[bi] = b;
@@ -1135,17 +1151,18 @@ function blockHTML(b, bi, editing, sel) {
   if (b.排版 === "比對" && b.檔案.length >= 2) {
     const [pre, post] = b.檔案, pos = b.調整._pos ?? 50;
     inner = `<div class="ba-stage" data-bi="${bi}" style="aspect-ratio:${ratio}">
-      <div class="ba-layer"><img src="${photoSrc(post)}" alt="" style="${imgStyle(adjOf(b, post))}" data-ph="${post}" data-src-ph="${post}"></div>
-      <div class="ba-layer clip" style="clip-path:inset(0 ${100 - pos}% 0 0)"><img src="${photoSrc(pre)}" alt="" style="${imgStyle(adjOf(b, pre))}" data-ph="${pre}" data-src-ph="${pre}"></div>
+      <div class="ba-layer"><img src="${photoSrc(post)}" alt="" style="${imgStyle(adjOf(b, post))}" data-ph="${post}" data-src-ph="${post}">${blurHTML(adjOf(b, post), editing, post)}</div>
+      <div class="ba-layer clip" style="clip-path:inset(0 ${100 - pos}% 0 0)"><img src="${photoSrc(pre)}" alt="" style="${imgStyle(adjOf(b, pre))}" data-ph="${pre}" data-src-ph="${pre}">${blurHTML(adjOf(b, pre), editing, pre)}</div>
       <div class="ba-div" style="left:${pos}%"><span class="ba-knob">◀▶</span></div>
       <span class="ba-tag pre ${editing && sel !== pre ? "dim" : ""}">PRE-OP</span><span class="ba-tag post ${editing && sel !== post ? "dim" : ""}">POST-OP</span>
     </div>`;
   } else {
     const type = b.排版 === "比對" ? "並排" : b.排版;
     const ids = type === "單張" ? b.檔案.slice(0, 1) : b.檔案;
-    inner = `<div class="pgrid ${type}">${ids.map(id => `<div class="fr ${sel === id ? "sel" : ""}" data-bi="${bi}" data-ph="${id}" tabindex="0" style="aspect-ratio:${ratio}"><img src="${photoSrc(id)}" alt="" style="${imgStyle(adjOf(b, id))}" data-src-ph="${id}"><span class="fn">${esc(phName(id))}</span></div>`).join("")}</div>`;
+    inner = `<div class="pgrid ${type}">${ids.map(id => `<div class="fr ${sel === id ? "sel" : ""}" data-bi="${bi}" data-ph="${id}" tabindex="0" style="aspect-ratio:${ratio}"><img src="${photoSrc(id)}" alt="" style="${imgStyle(adjOf(b, id))}" data-src-ph="${id}">${blurHTML(adjOf(b, id), editing, id)}${consult ? "" : `<span class="fn">${esc(phName(id))}</span>`}</div>`).join("")}</div>`;
   }
-  return `<div class="pblock">${inner}${b.說明 ? `<div class="caption">${esc(b.說明)}</div>` : ""}${b.排版 === "比對" && !editing ? `<span class="hint">左右拖曳比對術前、術後</span>` : ""}</div>`;
+  const deid = !editing && consult && b.姓名 && (!window.API || isAdmin() || (scopeOfKey(b.歸屬) === "o" ? canOther() : involved(b.姓名, USER)));
+  return `<div class="pblock">${deid ? `<button type="button" class="btn sm pb-deid" data-act="photos" data-key="${esc(b.歸屬)}" data-name="${esc(b.姓名)}">去識別</button>` : ""}${inner}${b.說明 ? `<div class="caption">${esc(b.說明)}</div>` : ""}${b.排版 === "比對" && !editing ? `<span class="hint">左右拖曳比對術前、術後</span>` : ""}</div>`;
 }
 
 /* ---------- list ---------- */
@@ -1258,7 +1275,7 @@ function itemLabel(it) {
 function libraryHTML(name, scope, items, plan) {
   const all = photosOf(name, scope).map(x => ({ x, m: photoMeta(x) })).sort((a, b) => (a.m.date || "") < (b.m.date || "") ? -1 : (a.m.date || "") > (b.m.date || "") ? 1 : a.x.檔名 < b.x.檔名 ? -1 : 1);
   const editable = !peer && (scope === "o" ? canOther() : canEditCase(name));
-  if (!all.length && !editable) return "";
+  if (consult || (!all.length && !editable)) return "";
   const use = usageMap(name, scope, items, plan), thumbId = (scope === "o" ? DATA.opatients.find(x => x.姓名 === name) : DATA.patients.find(x => x.姓名 === name))?.縮圖;
   const sel = view.libSel.filter(id => all.some(o => o.x.id === id));
   const nUn = plan.unassigned.length;
@@ -1344,7 +1361,7 @@ function itemParts(c, it, plan) {
   const cat = et.程度 === "Survival" ? "fail" : et.程度 === "Success" ? "comp" : e.類型 === "例行追蹤" ? "visit" : "adj";
   const perio = [numv(e.骨吸收, "mm bone loss"), numv(e.探測深度, "mm PD"), e.出血化膿 && e.出血化膿 !== "無" ? e.出血化膿 : ""].filter(Boolean).join(" · ");
   return { cat, title: esc(en(e.類型)), loc: esc(e.部位 || "整口"), acts: actsHTML(e, "events", it.key),
-    body: `${kv([["New MUA", e.類型 === "MUA 更換" ? `${esc(muaAngle(e.MUA角度))} · ${e.MUA高度} mm <small>· ${e.MUA扭力} Ncm</small>` : ""], ["Findings", perio], ["可能原因", esc(e.可能原因)], ["處理", esc(e.處理)], ["記錄", esc(e.記錄醫師)]])}
+    body: `${kv([["New MUA", e.類型 === "MUA 更換" ? `${esc(muaAngle(e.MUA角度))} · ${e.MUA高度} mm <small>· ${e.MUA扭力} Ncm</small>` : ""], ["Findings", perio], ["可能原因", consult ? "" : esc(e.可能原因)], ["處理", esc(e.處理)], ["記錄", esc(e.記錄醫師)]])}
       ${e.檢討 ? `<div class="review">${esc(e.檢討)}</div>` : ""}${photos}` };
 }
 
@@ -1628,13 +1645,14 @@ function edRender() {
         ${a ? `<div class="adj"><div class="spread"><span class="hint">調整：${esc(phName(ED.sel))}　在畫面上拖曳可移動位置</span>${bk.排版 === "比對" && bk.檔案.length >= 2 ? `<div class="seg"><button type="button" data-act="ed-sel" data-ph="${bk.檔案[0]}" aria-pressed="${ED.sel === bk.檔案[0]}">術前</button><button type="button" data-act="ed-sel" data-ph="${bk.檔案[1]}" aria-pressed="${ED.sel === bk.檔案[1]}">術後</button></div>` : ""}</div>
           ${[["z", "縮放", 100, 400, 1], ["r", "旋轉", -20, 20, .5], ["b", "亮度", 50, 160, 1], ["c", "對比", 50, 220, 1]].map(([k, n, mi, ma, st]) => `<label class="sl"><span>${n}</span><input type="range" data-adj="${k}" min="${mi}" max="${ma}" step="${st}" value="${k === "z" ? Math.round(a.z * 100) : a[k]}"><output>${k === "z" ? Math.round(a.z * 100) + "%" : k === "r" ? a.r + "°" : a[k] + "%"}</output></label>`).join("")}
           ${bk.排版 === "比對" ? `<label class="sl"><span>分隔位置</span><input type="range" data-adj="_pos" min="0" max="100" step="1" value="${bk.調整._pos ?? 50}"><output>${bk.調整._pos ?? 50}%</output></label>` : ""}
-          <div class="row"><button class="btn sm" data-act="ed-reset">重設這張</button><button class="btn sm" data-act="ed-out">移出這一組</button></div></div>` : ""}
+          <div class="row"><button class="btn sm" data-act="blur-add">＋ 去識別模糊</button><button class="btn sm" data-act="ed-reset">重設這張</button><button class="btn sm" data-act="ed-out">移出這一組</button></div>
+          <p class="hint">模糊框可以拖曳移動、拉右下角的圓點調整大小，按 ✕ 移除。儲存後在所有模式都會模糊。</p></div>` : ""}
         <label class="f wide"><span>說明（選填）</span><input data-act-input="caption" value="${esc(bk.說明 || "")}"></label>` : ""}
     </div>`).join("")}
-    <button class="btn sm" data-act="ed-add" style="align-self:flex-start">＋ 新增一組照片</button>
-    <div class="h3">資料夾裡的照片（點一下加入或移出目前這一組）</div>
-    ${folder.length ? "" : `<p class="hint">${window.API ? "資料夾裡還沒有照片，按左下角「上傳照片」。" : "資料夾裡還沒有照片。"}</p>`}
-    <div class="tgrid">${folder.map(p => { const k = b.檔案.indexOf(p.id); return thumbHTML(p.id, k >= 0, k >= 0 ? k + 1 : 0, k < 0 && usedBy[p.id] ? "已用於 " + usedBy[p.id].slice(5) : "", "ed-toggle"); }).join("")}</div>`;
+    ${consult ? `<p class="hint">諮詢模式不顯示資料夾裡的其他照片。</p>` : `<button class="btn sm" data-act="ed-add" style="align-self:flex-start">＋ 新增一組照片</button>
+    <div class="h3">資料夾裡的照片（點一下加入或移出目前這一組）</div>`}
+    ${consult ? "" : folder.length ? "" : `<p class="hint">${window.API ? "資料夾裡還沒有照片，按左下角「上傳照片」。" : "資料夾裡還沒有照片。"}</p>`}
+    <div class="tgrid">${(consult ? [] : folder).map(p => { const k = b.檔案.indexOf(p.id); return thumbHTML(p.id, k >= 0, k >= 0 ? k + 1 : 0, k < 0 && usedBy[p.id] ? "已用於 " + usedBy[p.id].slice(5) : "", "ed-toggle"); }).join("")}</div>`;
   sb.scrollTop = y;
   const cap = $("[data-act-input=caption]", sb); if (cap) cap.addEventListener("input", e => { ED.blocks[ED.active].說明 = e.target.value; });
   $$("[data-adj]", sb).forEach(inp => inp.addEventListener("input", () => {
@@ -1718,11 +1736,13 @@ async function doUpload() {
   const items = UP.rows.map(r => ({ file: r.file, base: `${r.date.replace(/-/g, "")}_${r.cat}` }));
   const prog = (frac, done, n) => { const b = $("#upbar"); if (b) b.style.width = Math.round(frac * 100) + "%"; const tx = $("#uptxt"); if (tx) tx.textContent = `已完成 ${done} / ${n} 張（${Math.round(frac * 100)}%）`; };
   try {
-    const res = await window.API.upload(UP.name, UP.scope, items, prog, (i, ok) => { const row = $(`.uprow[data-i="${i}"]`); if (row) row.classList.add(ok ? "done" : "err"); });
+    const errs = [];
+    const res = await window.API.upload(UP.name, UP.scope, items, prog, (i, ok, msg) => { const row = $(`.uprow[data-i="${i}"]`); if (row) row.classList.add(ok ? "done" : "err"); if (!ok) errs.push(msg); });
     const added = res.filter(Boolean);
     added.forEach(ph => PHOTOS.push(ph));
     const failed = res.length - added.length;
     toast(`已上傳 ${added.length} 張${failed ? `，${failed} 張失敗（標紅框），可以再試一次` : ""}`);
+    if (failed) $("#ferr").textContent = "失敗原因：" + (errs[0] || "不明");
     if (failed) { UP.rows = UP.rows.filter((r, i) => !res[i]); UP.busy = false; btn.disabled = false; btn.textContent = "重試失敗的"; $("#upv").innerHTML = ""; return; }
     if (UP.fromEditor && ED) { const bk = ED.blocks[ED.active]; added.forEach(ph => bk.檔案.push(ph.id)); ED.sel = added[0]?.id || ED.sel; UP = null; reopenEditor(); }
     else { UP = null; view.libOpen = true; closeSheet(); render(); }
@@ -1816,7 +1836,7 @@ function otherParts(it, plan) {
     const sd = oPlanSurgery(r), txt = [["規劃內容", r.規劃], ["考量與風險", r.考量]].filter(([, v]) => v);
     return { cat: "plan", title: "Pre-op planning", loc: sd ? `治療 ${sd}` : "尚未治療", acts,
       body: `${txt.length ? `<div class="ptext">${txt.map(([k, v]) => `<div><b>${k}</b><p>${esc(v)}</p></div>`).join("")}</div>` : ""}
-        ${r.術後對照 ? `<div class="ptext"><div><b>術後實際與差異</b><div class="pr" style="display:block;border:0;padding:0"><div class="why">${esc(r.術後對照)}</div></div></div></div>` : sd ? `<p class="hint">術後可以按「編輯」補寫實際與規劃的差異。</p>` : ""}
+        ${r.術後對照 ? `<div class="ptext rvx"><div><b>術後實際與差異</b><div class="pr" style="display:block;border:0;padding:0"><div class="why">${esc(r.術後對照)}</div></div></div></div>` : sd ? `<p class="hint">術後可以按「編輯」補寫實際與規劃的差異。</p>` : ""}
         <span class="by">規劃：${esc(r.規劃醫師)}</span>${photos}` };
   }
   if (it.kind === "XS") return { cat: "surg", title: listOf(r.類型).map(tp => `<span class="tag sm tg-other">${esc(tp)}</span>`).join(" ") || "治療", loc: esc(r.部位 || ""), acts,
@@ -2016,7 +2036,8 @@ function render() {
   $("#tabs").innerHTML = tab("cases", "植牙病例") + (canOther() && !peer ? tab("other", "其他治療") : "") + (isAdmin() && !peer ? tab("stats", "統計") + tab("review", "檢討") : "");
   if (view.tab === "review" && (!isAdmin() || peer)) view.tab = "cases";
   if (view.tab === "other" && (!canOther() || peer)) view.tab = "cases";
-  $("#peer").setAttribute("aria-checked", peer);
+  $$(".modes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === MODE));
+  document.body.classList.toggle("consult", consult);
   if (view.tab === "stats" && (!isAdmin() || peer)) view.tab = "cases";
   if (view.patient && !canSee(view.patient)) view.patient = null;
   if (view.other && (!otherNames().includes(view.other) || !canOther() || peer)) view.other = null;
@@ -2062,7 +2083,7 @@ function closeCase(fromPop) {
 window.addEventListener("popstate", () => { if (view.patient || view.other) { closeSheet(); closeCase(true); } });
 document.addEventListener("click", e => {
   const a = e.target.closest("[data-act]"); if (!a) return;
-  const act = a.dataset.act, sheet = $(".sheet");
+  const act = a.dataset.act, sheet = $(".sheet"), a2 = a;
   if (act === "scrim") { if (e.target === a) { closeSheet(); ED = null; } return; }
   switch (act) {
     case "close": closeSheet(); ED = null; UP = null; return;
@@ -2123,6 +2144,9 @@ document.addEventListener("click", e => {
     case "ed-add": ED.blocks.push(mkBlock(ED.name, ED.key, "並排", [])); ED.active = ED.blocks.length - 1; ED.sel = null; edRender(); return;
     case "ed-sel": ED.sel = a.dataset.ph; edRender(); return;
     case "ed-reset": delete ED.blocks[ED.active].調整[ED.sel]; edRender(); return;
+    case "blur-add": { const bk = ED.blocks[ED.active], a = adjOf(bk, ED.sel); const cmpL = bk.排版 === "比對" && bk.檔案[0] === ED.sel, cmpR = bk.排版 === "比對" && bk.檔案[1] === ED.sel; a.blur = (a.blur || []).concat([{ x: cmpL ? 8 : cmpR ? 58 : 32, y: 24, w: 32, h: 28 }]); bk.調整[ED.sel] = a; edRender(); return; }
+    case "blur-del": { const bk = ED.blocks[ED.active], a = adjOf(bk, a2.dataset.ph); a.blur.splice(+a2.dataset.i, 1); bk.調整[a2.dataset.ph] = a; edRender(); return; }
+    case "mode": MODE = a.dataset.m; peer = MODE !== "full"; consult = MODE === "consult"; store.set("mode", MODE); if (peer && (view.tab === "stats" || view.tab === "review" || view.tab === "other")) view.tab = "cases"; render(); return;
     case "ed-out": { const b = ED.blocks[ED.active]; b.檔案 = b.檔案.filter(x => x !== ED.sel); ED.sel = b.檔案[0] || null; edRender(); return; }
     case "ed-save": saveEditor(); return;
     case "ss-kind": SS.kind = a.dataset.k; SS.filters = {}; SS.g1 = SS.kind === "implant" ? "角度" : "階段"; SS.g2 = ""; store.set("ss", SS); render(); return;
@@ -2130,8 +2154,8 @@ document.addEventListener("click", e => {
     case "ss-clear": e.preventDefault(); SS.filters = {}; store.set("ss", SS); render(); return;
   }
 });
-$(".peer").addEventListener("click", e => { e.preventDefault(); peer = !peer; store.set("peer", peer); render(); });
-document.addEventListener("click", e => { const fr = e.target.closest(".fr"); if (fr && !fr.closest(".editing") && !fr.closest(".sheet")) openLightbox(fr.dataset.ph); });
+
+document.addEventListener("click", e => { const fr = e.target.closest(".fr"); if (fr && !consult && !fr.closest(".editing") && !fr.closest(".sheet")) openLightbox(fr.dataset.ph); });
 function openLightbox(id) {
   const d = document.createElement("div"); d.className = "lb"; d.innerHTML = `<img src="${window.API ? window.API.fullSrc(id) : photoSrc(id)}" alt="" data-src-ph="${id}"><button type="button">關閉</button>`;
   d.addEventListener("click", () => d.remove()); document.body.appendChild(d);
@@ -2143,6 +2167,14 @@ document.addEventListener("dragstart", e => { if (e.target.closest(".ba-stage, .
 document.addEventListener("pointerdown", e => {
   const stage = e.target.closest(".ba-stage"), fr = e.target.closest(".fr");
   const inEd = !!e.target.closest(".editing");
+  const bb = e.target.closest(".blurbox");
+  if (bb && inEd && ED && !e.target.closest(".bx")) {
+    const bk = ED.blocks[ED.active], id = bb.dataset.ph, i = +bb.dataset.bl, frame = bb.closest(".fr, .ba-stage");
+    if (id !== ED.sel) { ED.sel = id; }
+    const r = adjOf(bk, id).blur[i];
+    drag = { mode: e.target.closest(".rz") ? "bsize" : "bmove", id, i, sx: e.clientX, sy: e.clientY, o: Object.assign({}, r), box: frame.getBoundingClientRect() };
+    e.preventDefault(); return;
+  }
   if (inEd && ED) {
     const bk = ED.blocks[ED.active];
     let id = fr ? fr.dataset.ph : null;
@@ -2168,7 +2200,13 @@ function moveDiv(x) {
 document.addEventListener("pointermove", e => {
   if (!drag) return;
   if (drag.mode === "div") moveDiv(e.clientX);
-  else {
+  else if (drag.mode === "bmove" || drag.mode === "bsize") {
+    const bk = ED.blocks[ED.active], a = adjOf(bk, drag.id), r = a.blur[drag.i];
+    const dx = (e.clientX - drag.sx) / drag.box.width * 100, dy = (e.clientY - drag.sy) / drag.box.height * 100, cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    if (drag.mode === "bmove") { r.x = +cl(drag.o.x + dx, -10, 100 - drag.o.w + 10).toFixed(1); r.y = +cl(drag.o.y + dy, -10, 100 - drag.o.h + 10).toFixed(1); }
+    else { r.w = +cl(drag.o.w + dx, 6, 120).toFixed(1); r.h = +cl(drag.o.h + dy, 6, 120).toFixed(1); }
+    bk.調整[drag.id] = a; refreshEdPreview();
+  } else {
     const bk = ED.blocks[ED.active], a = adjOf(bk, drag.id);
     a.x = +(drag.ox + (e.clientX - drag.sx) / drag.box.width * 100).toFixed(2); a.y = +(drag.oy + (e.clientY - drag.sy) / drag.box.height * 100).toFixed(2);
     bk.調整[drag.id] = a; refreshEdPreview();
