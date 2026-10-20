@@ -1749,10 +1749,10 @@ async function exifDate(file) {
   } catch (e) {}
   return null;
 }
-function openUpload(scope) {
-  const name = ED ? ED.name : scope === "o" ? view.other : view.patient;
-  UP = { scope, name, rows: [], fromEditor: !!ED, busy: false };
-  openSheet(`上傳照片 · ${scope === "o" ? oLabel(name) : label(name)}`, `
+function openUpload(scope, nameOverride, fromStory) {
+  const name = nameOverride || (ED ? ED.name : scope === "o" ? view.other : view.patient);
+  UP = { scope, name, rows: [], fromEditor: !!ED && !fromStory, fromStory: fromStory || null, busy: false };
+  openSheet(`上傳照片 · ${scope === "e" ? "衛教照片" : scope === "o" ? oLabel(name) : label(name)}`, `
     <label class="f wide"><span>選擇照片（可以一次選很多張）</span><input id="upf" type="file" accept="image/*" multiple></label>
     <div class="fgrid">
       <label class="f"><span>全部套用分類</span><select id="upall">${UP_LABELS.map(l => `<option>${l}</option>`).join("")}</select></label>
@@ -1797,6 +1797,7 @@ async function doUpload() {
     if (failed) $("#ferr").textContent = "失敗原因：" + (errs[0] || "不明");
     if (failed) { UP.rows = UP.rows.filter((r, i) => !res[i]); UP.busy = false; btn.disabled = false; btn.textContent = "重試失敗的"; $("#upv").innerHTML = ""; return; }
     if (UP.fromEditor && ED) { const bk = ED.blocks[ED.active]; added.forEach(ph => bk.檔案.push(ph.id)); ED.sel = added[0]?.id || ED.sel; UP = null; reopenEditor(); }
+    else if (UP.fromStory) { const fs = UP.fromStory; UP = null; fs.draft.內容 = (fs.draft.內容 || "") + added.map(ph => `\n![](photo:${ph.id})\n`).join(""); openStory(fs.name, fs.scope, fs.rec, fs.draft); }
     else { UP = null; view.libOpen = true; closeSheet(); render(); }
   } catch (err) { UP.busy = false; btn.disabled = false; btn.textContent = "上傳"; $("#ferr").textContent = "上傳失敗：" + (err.message || err); }
 }
@@ -1963,6 +1964,7 @@ function storySection(name, scope) {
   const s = storyOf(name, scope), canW = !window.API || isAdmin() || (scope === "o" ? canOther() : involved(name, USER));
   if (!s || !String(s.內容 || "").trim()) return "";
   return `<section class="block story"><div class="spread"><h3>${s.標題 ? esc(s.標題) : "病例故事"}</h3>${canW ? `<button class="btn ghost sm" data-act="story-edit" data-scope="${scope}" data-name="${esc(name)}">編輯</button>` : ""}</div>
+    ${listOf(s.標籤).length ? `<div class="pills">${listOf(s.標籤).map(g => `<span class="pill"># ${esc(g)}</span>`).join("")}</div>` : ""}
     <div class="md">${mdRender(s.內容, name, scope)}</div></section>`;
 }
 const hasStory = (name, scope) => { const s = storyOf(name, scope); return !!(s && String(s.內容 || "").trim()); };
@@ -1978,25 +1980,40 @@ function toggleEdu(name, scope) {
 }
 
 /* ---------- education cases: picked cases, shown in every mode ---------- */
+const firstPhotoIn = s => { const m = String(s.內容 || "").match(/\]\(photo:([^)\s]+)\)/); return m ? m[1] : null; };
+const excerpt = s => String(s.內容 || "").replace(/!\[[^\]]*\]\([^)]*\)/g, "").replace(/[#>*=\-]|\{[^}]*\}/g, "").replace(/\s+/g, " ").trim().slice(0, 70);
 function eduView() {
-  const recs = DATA.stories.filter(s => s.衛教 === "是").filter(s => (s.範圍 || "i") === "o" ? canOther() && otherNames().includes(s.姓名) : DATA.patients.some(p => p.姓名 === s.姓名) && canSee(s.姓名));
-  const catOf = s => (s.範圍 || "i") === "o" ? otypes(otherCase(s.姓名)) : [...new Set(DATA.implants.filter(i => i.姓名 === s.姓名).map(i => i.術式))].filter(x => x !== "重植");
-  const cats = [...new Set(recs.flatMap(catOf))];
-  const f = view.eduF || "全部", shown = recs.filter(s => f === "全部" || catOf(s).includes(f)).sort((a, b) => (a.更新時間 || "") < (b.更新時間 || "") ? 1 : -1);
-  return `<div class="spread"><h2 style="margin:0;font-family:var(--serif)">衛教案例</h2><span class="hint">${shown.length} 個案例</span></div>
+  const recs = DATA.stories.filter(s => s.衛教 === "是").filter(s => { const sc = s.範圍 || "i"; return sc === "e" ? true : sc === "o" ? canOther() && otherNames().includes(s.姓名) : DATA.patients.some(p => p.姓名 === s.姓名) && canSee(s.姓名); });
+  const catOf = s => { const sc = s.範圍 || "i"; return sc === "e" ? ["衛教文章"] : sc === "o" ? otypes(otherCase(s.姓名)) : [...new Set(DATA.implants.filter(i => i.姓名 === s.姓名).map(i => i.術式))].filter(x => x !== "重植"); };
+  const cats = [...new Set(recs.flatMap(catOf))], tags = [...new Set(recs.flatMap(s => listOf(s.標籤)))].sort();
+  const f = view.eduF || "全部", tg = view.eduTag || "";
+  const shown = recs.filter(s => (f === "全部" || catOf(s).includes(f)) && (!tg || listOf(s.標籤).includes(tg))).sort((a, b) => (a.更新時間 || "") < (b.更新時間 || "") ? 1 : -1);
+  return `<div class="spread"><h2 style="margin:0;font-family:var(--serif)">衛教案例</h2><span class="hint">${shown.length} 篇</span>${isAdmin() ? `<button class="btn primary sm" data-act="edu-new">＋ 衛教文章</button>` : ""}</div>
     ${recs.length ? `<div class="chips">${["全部"].concat(cats).map(c => `<button class="chip" data-act="edu-f" data-f="${esc(c)}" aria-pressed="${f === c}">${esc(en(c))}</button>`).join("")}</div>` : ""}
+    ${tags.length ? `<div class="chips">${tags.map(g => `<button class="chip" data-act="edu-tag" data-t="${esc(g)}" aria-pressed="${tg === g}"># ${esc(g)}</button>`).join("")}</div>` : ""}
     <div class="list cards">${shown.map(s => { const sc = s.範圍 || "i", nm = s.姓名;
+      const tagsH = listOf(s.標籤).map(g => `<span class="pill"># ${esc(g)}</span>`).join("");
+      if (sc === "e") { const ph = firstPhotoIn(s);
+        return `<button class="card pc" data-act="art-open" data-id="${s.ID}">${ph ? `<span class="cthumb" data-src-ph="${ph}" style="background-image:url(${photoSrc(ph)})"></span>` : `<span class="cthumb">${TOOTH_ICON}</span>`}<span class="cbody">
+          <span class="row1"><span class="name">${esc(s.標題)}</span><span class="tag sm tg-partial">衛教文章</span></span>
+          <span class="sub">${esc(excerpt(s))}</span>${tagsH ? `<span class="pills">${tagsH}</span>` : ""}</span></button>`; }
       return `<button class="card pc" data-act="${sc === "o" ? "open-other" : "open"}" data-p="${esc(nm)}" data-keep="1">${cthumbHTML(nm, sc)}<span class="cbody">
         <span class="row1"><span class="name">${esc(sc === "o" ? oLabel(nm) : label(nm))}</span>${catOf(s).map(c => sc === "o" ? `<span class="tag tg-other">${esc(c)}</span>` : tagHTML(c)).join("")}</span>
-        ${s.標題 ? `<span class="sub" style="font-size:14.5px;color:var(--ink)">${esc(s.標題)}</span>` : ""}
-        <span class="sub">${esc(String(s.內容 || "").replace(/!\[[^\]]*\]\([^)]*\)/g, "").replace(/[#>*=\-]|\{[^}]*\}/g, "").replace(/\s+/g, " ").trim().slice(0, 70))}</span></span></button>`; }).join("") || `<p class="empty">還沒有衛教案例。在病人視窗按「☆ 加入衛教案例」就會出現在這裡。</p>`}</div>`;
+        ${s.標題 ? `<span class="sub" style="font-size:14.5px;color:var(--ink)">${esc(s.標題)}</span>` : ""}${tagsH ? `<span class="pills">${tagsH}</span>` : ""}
+        <span class="sub">${esc(excerpt(s))}</span></span></button>`; }).join("") || `<p class="empty">還沒有衛教案例。在病人視窗按「☆ 加入衛教案例」就會出現在這裡。</p>`}</div>`;
 }
 let STY = null;
-function openStory(name, scope) {
-  const s = storyOf(name, scope);
-  STY = { name, scope, rec: s, tab: "edit" };
-  openSheet(`病例故事 · ${scope === "o" ? oLabel(name) : label(name)}`, `
-    <label class="f wide"><span>標題</span><input id="stt" value="${esc(s ? s.標題 : "")}" placeholder="例：二十年活動假牙，到一天固定"></label>
+const EDU_NAME = "衛教";
+const allTags = () => [...new Set(DATA.stories.flatMap(s => listOf(s.標籤)))].sort();
+function openStory(name, scope, rec, draft) {
+  const s = scope === "e" ? rec || null : storyOf(name, scope);
+  STY = { name: scope === "e" ? EDU_NAME : name, scope, rec: s, tab: "edit" };
+  const d = draft || { 標題: s ? s.標題 : "", 內容: s ? s.內容 : "", 標籤: s ? s.標籤 : "" };
+  if (scope === "e" && window.API) window.API.ensurePhotos(EDU_NAME, "e");
+  openSheet(scope === "e" ? (s ? "編輯衛教文章" : "新增衛教文章") : `病例故事 · ${scope === "o" ? oLabel(name) : label(name)}`, `
+    <label class="f wide"><span>標題</span><input id="stt" value="${esc(d.標題 || "")}" placeholder="${scope === "e" ? "例：什麼是 All-on-X？" : "例：二十年活動假牙，到一天固定"}"></label>
+    <label class="f wide"><span>標籤（用頓號或逗號分開）</span><input id="stg" value="${esc(listOf(d.標籤).join("、"))}" placeholder="例：All-on-X、術後照顧、費用"></label>
+    ${allTags().length ? `<div class="mchips">${allTags().map(g => `<button type="button" class="chip" data-act="tag-add" data-v="${esc(g)}">＋ ${esc(g)}</button>`).join("")}</div>` : ""}
     <div class="mdbar" role="toolbar" aria-label="格式">
       <button type="button" class="chip" data-act="md" data-md="h2">標題</button><button type="button" class="chip" data-act="md" data-md="h3">小標</button>
       <button type="button" class="chip" data-act="md" data-md="b"><b>粗體</b></button><button type="button" class="chip" data-act="md" data-md="i"><i>斜體</i></button>
@@ -2006,11 +2023,11 @@ function openStory(name, scope) {
       <button type="button" class="chip" data-act="md-photo">＋ 插入照片</button>
     </div>
     <div class="seg" role="tablist"><button type="button" data-act="md-tab" data-t="edit" aria-pressed="true">編輯</button><button type="button" data-act="md-tab" data-t="view" aria-pressed="false">預覽</button></div>
-    <textarea id="stx" class="mdta" spellcheck="false" placeholder="## 初診&#10;病人主訴……&#10;&#10;{橘}重點文字{/}">${esc(s ? s.內容 : "")}</textarea>
+    <textarea id="stx" class="mdta" spellcheck="false" placeholder="## 初診&#10;病人主訴……&#10;&#10;{橘}重點文字{/}">${esc(d.內容 || "")}</textarea>
     <div id="stv" class="md" hidden></div>
     <div id="stp" hidden></div>
     <p class="hint">格式：## 標題、**粗體**、*斜體*、==螢光==、- 清單、&gt; 引言、{橘}彩色文字{/}（橘、藍、青、綠、紅、灰）。插入的照片排版會帶著去識別模糊。</p>`,
-    `<span class="left">${s && canDelete() ? `<button class="btn warn sm" data-act="story-del">刪除</button>` : ""}<span class="err" id="ferr"></span></span><button class="btn" data-act="close">取消</button><button class="btn primary" data-act="story-save">儲存</button>`);
+    `<span class="left">${s && canDelete() ? `<button class="btn warn sm" data-act="story-del">刪除</button>` : ""}${window.API ? `<button class="btn sm" data-act="story-upload">＋ 上傳照片</button>` : ""}<span class="err" id="ferr"></span></span><button class="btn" data-act="close">取消</button><button class="btn primary" data-act="story-save">儲存</button>`);
 }
 function mdWrap(kind) {
   const ta = $("#stx"); if (!ta) return;
@@ -2029,9 +2046,9 @@ function mdWrap(kind) {
 function mdPhotoPicker() {
   const { name, scope } = STY, box = $("#stp");
   if (!box.hidden) { box.hidden = true; return; }
-  const items = itemsFor(name, scope), blocks = [];
-  [scope === "o" ? "XOV" : "OV"].concat(items.map(i => i.key)).forEach(k => blocksFor(name, k).forEach((b, i) => blocks.push({ k, i, b, lab: isOV(k) ? "總覽" : itemLabel(items.find(x => x.key === k)) })));
-  box.innerHTML = `<div class="h3">照片排版（會帶著模糊）</div><div class="tgrid">${blocks.map(o => `<button type="button" class="thumb" data-act="md-ins" data-ref="layout:${esc(o.k)}#${o.i}"><span class="im" data-src-ph="${o.b.檔案[0]}" style="background-image:url(${photoSrc(o.b.檔案[0])})"><b>${o.b.排版}</b></span><span>${esc(o.lab)}</span></button>`).join("") || `<p class="hint">還沒有照片排版。</p>`}</div>
+  const items = scope === "e" ? [] : itemsFor(name, scope), blocks = [];
+  (scope === "e" ? [] : [scope === "o" ? "XOV" : "OV"].concat(items.map(i => i.key))).forEach(k => blocksFor(name, k).forEach((b, i) => blocks.push({ k, i, b, lab: isOV(k) ? "總覽" : itemLabel(items.find(x => x.key === k)) })));
+  box.innerHTML = `${scope === "e" ? `<p class="hint">衛教文章的照片放在共用的「衛教照片」資料夾，用左下角「＋ 上傳照片」加入。</p>` : `<div class="h3">照片排版（會帶著模糊）</div>`}${scope === "e" ? "" : `<div class="tgrid">`}${scope === "e" ? "" : blocks.map(o => `<button type="button" class="thumb" data-act="md-ins" data-ref="layout:${esc(o.k)}#${o.i}"><span class="im" data-src-ph="${o.b.檔案[0]}" style="background-image:url(${photoSrc(o.b.檔案[0])})"><b>${o.b.排版}</b></span><span>${esc(o.lab)}</span></button>`).join("") || `<p class="hint">還沒有照片排版。</p>`}${scope === "e" ? "" : "</div>"}
     <div class="h3">單張照片</div><div class="tgrid">${photosOf(name, scope).map(ph => thumbHTML(ph.id, false, 0, "", "md-ins")).join("") || `<p class="hint">照片庫還沒有照片。</p>`}</div>`;
   box.hidden = false;
 }
@@ -2040,12 +2057,16 @@ function mdInsert(ref) {
   ta.value = v.slice(0, s) + tok + v.slice(s); ta.focus(); ta.setSelectionRange(s + tok.length, s + tok.length);
   $("#stp").hidden = true;
 }
+const storyDraft = () => ({ 標題: $("#stt").value.trim(), 內容: $("#stx").value, 標籤: listOf($("#stg").value).join("、") });
 function saveStory() {
   const { name, scope } = STY;
   let r = STY.rec;
-  const v = { 標題: $("#stt").value.trim(), 內容: $("#stx").value, 更新時間: today() };
-  if (r) Object.assign(r, v); else { r = Object.assign({ ID: uid("ST"), 姓名: name, 範圍: scope, 建立者: USER }, v); DATA.stories.push(r); }
-  STY = null; closeSheet(); render(); persist([{ op: "put", type: "stories", rec: r }], "病例故事已儲存");
+  const v = Object.assign(storyDraft(), { 更新時間: today() });
+  if (scope === "e" && !v.標題) { $("#ferr").textContent = "請填標題"; return; }
+  if (r) Object.assign(r, v); else { r = Object.assign({ ID: uid("ST"), 姓名: scope === "e" ? "" : name, 範圍: scope, 建立者: USER, 衛教: scope === "e" ? "是" : "" }, v); DATA.stories.push(r); }
+  STY = null; closeSheet();
+  if (scope === "e") view.article = r.ID;
+  render(); persist([{ op: "put", type: "stories", rec: r }], scope === "e" ? "衛教文章已儲存" : "病例故事已儲存");
 }
 
 /* ---------- monthly history (admin) ---------- */
@@ -2237,14 +2258,21 @@ function render() {
 }
 const recById = (type, id) => DATA[type].find(r => r.ID === id);
 let modalFor = null;
+function articleHTML(s) {
+  return `<div class="case-head"><div class="spread"><h2>${esc(s.標題)}</h2>${isAdmin() && !consult ? `<button class="btn sm" data-act="art-edit" data-id="${s.ID}">編輯</button>` : ""}</div>
+    ${listOf(s.標籤).length ? `<div class="pills">${listOf(s.標籤).map(g => `<span class="pill"># ${esc(g)}</span>`).join("")}</div>` : ""}</div>
+    <section class="block story"><div class="md">${mdRender(s.內容, EDU_NAME, "e")}</div></section>`;
+}
 function renderModal() {
-  const M = $("#modal"), key = view.patient ? "i|" + view.patient : view.other ? "o|" + view.other : null;
+  const art = view.article && DATA.stories.find(s => s.ID === view.article);
+  if (view.article && !art) view.article = null;
+  const M = $("#modal"), key = art ? "a|" + art.ID : view.patient ? "i|" + view.patient : view.other ? "o|" + view.other : null;
   if (!key) { if (M.innerHTML) M.innerHTML = ""; modalFor = null; if (!$(".sheet")) document.body.style.overflow = ""; return; }
   const body = $(".mbody", M), keep = modalFor === key && body ? body.scrollTop : 0;
-  const sname = view.patient || view.other, sscope = view.patient ? "i" : "o", st = storySection(sname, sscope);
-  const det0 = view.patient ? detailView(view.patient) : otherDetail(view.other);
+  const sname = view.patient || view.other, sscope = view.patient ? "i" : "o", st = art ? "" : storySection(sname, sscope);
+  const det0 = art ? articleHTML(art) : view.patient ? detailView(view.patient) : otherDetail(view.other);
   const det = consult ? det0.replace(/(<div class="case-head">[\s\S]*?<\/dl>[\s\S]*?<\/div>)/, "$1" + st) : det0 + st;
-  M.innerHTML = `<div class="mscrim" data-act="mclose-bg"><div class="modal" role="dialog" aria-modal="true" aria-label="病例"><div class="mhead"><b>${esc(view.patient ? label(view.patient) : oLabel(view.other))}</b><button class="btn sm" data-act="mclose">✕ 關閉</button></div><div class="mbody">${det}</div></div></div>`;
+  M.innerHTML = `<div class="mscrim" data-act="mclose-bg"><div class="modal" role="dialog" aria-modal="true" aria-label="病例"><div class="mhead"><b>${esc(art ? "衛教文章" : view.patient ? label(view.patient) : oLabel(view.other))}</b><button class="btn sm" data-act="mclose">✕ 關閉</button></div><div class="mbody">${det}</div></div></div>`;
   $(".mbody", M).scrollTop = keep;
   modalFor = key;
   document.body.style.overflow = "hidden";
@@ -2257,18 +2285,18 @@ function openCase(scope, name) {
   if (window.API) window.API.ensurePhotos(name, scope);
 }
 function closeCase(fromPop) {
-  view.patient = null; view.other = null; view.libSel = [];
+  view.patient = null; view.other = null; view.article = null; view.libSel = [];
   render();
   if (!fromPop) { try { if (history.state && history.state.m) history.back(); } catch (e) {} }
 }
-window.addEventListener("popstate", () => { if (view.patient || view.other) { closeSheet(); closeCase(true); } });
+window.addEventListener("popstate", () => { if (view.patient || view.other || view.article) { closeSheet(); closeCase(true); } });
 document.addEventListener("click", e => {
   const a = e.target.closest("[data-act]"); if (!a) return;
   const act = a.dataset.act, sheet = $(".sheet"), a2 = a;
   if (act === "scrim") { if (e.target === a) { closeSheet(); ED = null; } return; }
   switch (act) {
     case "close": closeSheet(); ED = null; UP = null; return;
-    case "tab": view.tab = a.dataset.t; view.patient = null; view.other = null; render(); window.scrollTo(0, 0); return;
+    case "tab": view.tab = a.dataset.t; view.patient = null; view.other = null; view.article = null; render(); window.scrollTo(0, 0); return;
     case "cat": { const k = a.dataset.c; view.cats = view.cats.includes(k) ? view.cats.filter(x => x !== k) : view.cats.concat(k); render(); return; }
     case "cat-clear": view.cats = []; render(); return;
     case "ocat": { const k = a.dataset.c; view.ocats = view.ocats.includes(k) ? view.ocats.filter(x => x !== k) : view.ocats.concat(k); render(); return; }
@@ -2277,7 +2305,13 @@ document.addEventListener("click", e => {
     case "add-osurg": openRecordForm("others"); return;
     case "add-oevent": openRecordForm("oevents"); return;
     case "upload": openUpload(a.dataset.scope); return;
-    case "up-cancel": if (UP && UP.fromEditor && ED) { UP = null; reopenEditor(); } else { UP = null; closeSheet(); } return;
+    case "up-cancel": if (UP && UP.fromEditor && ED) { UP = null; reopenEditor(); } else if (UP && UP.fromStory) { const fs = UP.fromStory; UP = null; openStory(fs.name, fs.scope, fs.rec, fs.draft); } else { UP = null; closeSheet(); } return;
+    case "story-upload": { const d = storyDraft(), st = STY; openUpload(st.scope, st.name, { name: st.name, scope: st.scope, rec: st.rec, draft: d }); return; }
+    case "tag-add": { const el = $("#stg"), cur = listOf(el.value); if (!cur.includes(a.dataset.v)) el.value = cur.concat(a.dataset.v).join("、"); return; }
+    case "edu-new": openStory(EDU_NAME, "e", null); return;
+    case "art-open": view.article = a.dataset.id; try { history.pushState({ m: 1 }, ""); } catch (e) {} render(); if (window.API) window.API.ensurePhotos(EDU_NAME, "e"); return;
+    case "art-edit": openStory(EDU_NAME, "e", DATA.stories.find(s => s.ID === a.dataset.id)); return;
+    case "edu-tag": view.eduTag = view.eduTag === a.dataset.t ? "" : a.dataset.t; render(); return;
     case "up-go": doUpload(); return;
     case "logout": window.API.logout(); return;
     case "plan-cmp": { e.preventDefault(); const id = a.dataset.id; view.planCmp = view.planCmp.includes(id) ? view.planCmp.filter(x => x !== id) : view.planCmp.concat(id); render(); return; }
@@ -2296,7 +2330,7 @@ document.addEventListener("click", e => {
     case "edu-toggle": toggleEdu(a.dataset.name, a.dataset.scope); return;
     case "edu-f": view.eduF = a.dataset.f; render(); return;
     case "story-save": saveStory(); return;
-    case "story-del": { const r = STY.rec; DATA.stories = DATA.stories.filter(x => x !== r); STY = null; closeSheet(); render(); persist([{ op: "del", type: "stories", id: r.ID }], "已刪除病例故事"); return; }
+    case "story-del": { const r = STY.rec; DATA.stories = DATA.stories.filter(x => x !== r); STY = null; if (view.article === r.ID) view.article = null; closeSheet(); render(); persist([{ op: "del", type: "stories", id: r.ID }], "已刪除病例故事"); return; }
     case "md": mdWrap(a.dataset.md); return;
     case "md-photo": mdPhotoPicker(); return;
     case "md-ins": mdInsert(a.dataset.ref || "photo:" + a.dataset.ph); return;
@@ -2405,7 +2439,7 @@ document.addEventListener("pointermove", e => {
 document.addEventListener("pointerup", () => { drag = null; });
 document.addEventListener("pointercancel", () => { drag = null; });
 let rw; window.addEventListener("resize", () => { clearTimeout(rw); rw = setTimeout(() => { if (view.patient && $("#chart")) $("#chart").innerHTML = chartHTML(caseOf(view.patient)); }, 150); });
-document.addEventListener("keydown", e => { if (e.key === "Escape") { const lb = $(".lb"); if (lb) lb.remove(); else if ($(".sheet")) { closeSheet(); ED = null; UP = null; } else if (view.patient || view.other) closeCase(); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { const lb = $(".lb"); if (lb) lb.remove(); else if ($(".sheet")) { closeSheet(); ED = null; UP = null; } else if (view.patient || view.other || view.article) closeCase(); } });
 document.addEventListener("toggle", e => { if (e.target.matches && e.target.matches("details[data-lib]")) view.libOpen = e.target.open; }, true);
 
 if (window.API) window.API.boot(); else { derive(); render(); }
