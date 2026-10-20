@@ -580,7 +580,7 @@ window.REG_CONFIG = {
   }
   async function ensurePhotos(name, scope, force) {
     const k = scope + "|" + name;
-    if (!name || (loaded[k] && !force)) return;
+    if (!name || (loaded[k] === true && !force)) return;
     loaded[k] = true;
     const ck = "reg_ph_" + k, prev = ls.get(ck);
     if (prev && !force) { try { setPhotos(name, scope, JSON.parse(prev)); if (!document.querySelector(".sheet")) render(); } catch (e) {} }
@@ -691,6 +691,24 @@ window.REG_CONFIG = {
     return res;
   }
 
+  /* 沒有縮圖的小卡：先用手機裡存過的照片清單，沒有的話背景去讀（一次最多 4 位） */
+  let thumbBusy = 0;
+  function afterRender(missing) {
+    if (peer || !missing || !missing.length) return;
+    let changed = false;
+    missing.forEach(([scope, name]) => {
+      const k = scope + "|" + name;
+      if (loaded[k]) return;
+      const prev = ls.get("reg_ph_" + k);
+      if (prev) { try { setPhotos(name, scope, JSON.parse(prev)); loaded[k] = "cache"; changed = true; } catch (e) {} }
+    });
+    if (changed) { setTimeout(() => { if (!document.querySelector(".sheet")) render(); }, 0); return; }
+    missing.filter(([s, n]) => !loaded[s + "|" + n]).slice(0, Math.max(0, 4 - thumbBusy)).forEach(([scope, name]) => {
+      thumbBusy++;
+      ensurePhotos(name, scope).finally(() => { thumbBusy--; });
+    });
+  }
+
   async function logout() {
     try { await call("logout"); } catch (e) {}
     session = null; ls.del(SKEY); ls.del(DKEY); lastJSON = "";
@@ -709,7 +727,7 @@ window.REG_CONFIG = {
     else showLogin();
   }
 
-  window.API = { boot, persist, photoSrc, fullSrc: photoSrc, afterRender() {}, ensurePhotos, upload, logout, reload: () => load(true) };
+  window.API = { boot, persist, photoSrc, fullSrc: photoSrc, afterRender, ensurePhotos, upload, logout, reload: () => load(true) };
 })();
 </script>
 <script>
@@ -1740,6 +1758,12 @@ async function doUpload() {
     const res = await window.API.upload(UP.name, UP.scope, items, prog, (i, ok, msg) => { const row = $(`.uprow[data-i="${i}"]`); if (row) row.classList.add(ok ? "done" : "err"); if (!ok) errs.push(msg); });
     const added = res.filter(Boolean);
     added.forEach(ph => PHOTOS.push(ph));
+    if (added.length) {   // 還沒有小卡縮圖的病人，自動用第一張上傳的照片
+      const isO = UP.scope === "o";
+      let rec = isO ? DATA.opatients.find(x => x.姓名 === UP.name) : DATA.patients.find(x => x.姓名 === UP.name);
+      if (!rec && isO) { rec = { ID: uid("Q"), 姓名: UP.name, 建立者: USER }; DATA.opatients.push(rec); }
+      if (rec && !rec.縮圖) { rec.縮圖 = added[0].id; persist([{ op: "put", type: isO ? "opatients" : "patients", rec }], "已設定小卡縮圖"); }
+    }
     const failed = res.length - added.length;
     toast(`已上傳 ${added.length} 張${failed ? `，${failed} 張失敗（標紅框），可以再試一次` : ""}`);
     if (failed) $("#ferr").textContent = "失敗原因：" + (errs[0] || "不明");
@@ -2043,7 +2067,7 @@ function render() {
   if (view.other && (!otherNames().includes(view.other) || !canOther() || peer)) view.other = null;
   $("#app").innerHTML = view.tab === "stats" ? statsView() : view.tab === "review" ? reviewView() : view.tab === "other" ? otherListView() : listView();
   renderModal();
-  if (window.API) window.API.afterRender();
+  if (window.API) window.API.afterRender($$("#app .card.pc").filter(c => !c.querySelector(".cthumb[data-src-ph]")).map(c => [c.dataset.act === "open-other" ? "o" : "i", c.dataset.p]));
   const oq = $("#oq");
   if (oq) oq.addEventListener("input", e => { view.oq = e.target.value.trim(); const pos = e.target.selectionStart; render(); const n = $("#oq"); n.focus(); n.setSelectionRange(pos, pos); });
   const q = $("#q");
