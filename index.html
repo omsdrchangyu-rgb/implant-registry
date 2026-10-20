@@ -15,7 +15,7 @@
 <style>:root{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
 /* Layout: navy header band with tabs; one 720px column; case = facts → tooth chart → dated timeline with photo blocks; edits in a bottom sheet */
 :root {
@@ -27,8 +27,8 @@
   --crown: #FFFFFF; --enamel: #3F4B4B; --groove: #8A9696; --root: #EAD9C2; --root-p: #D9C3A3; --root-line: #A68F70;
   --ti: #A7B3BA; --ti-dark: #56656D; --ti-light: #D3DBDF; --bridge: #F8EBE3;
   --scrim: rgba(20, 28, 34, .5);
-  --sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
-  --serif: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --sans: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
@@ -192,6 +192,7 @@ main { padding-block: 18px 72px; display: flex; flex-direction: column; gap: 16p
 .card { background: var(--card); border: 1px solid var(--hair); border-radius: 12px; padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; cursor: pointer; text-align: left; width: 100%; }
 .card:hover { border-color: var(--navy); }
 .card .name { font-family: var(--serif); font-size: 17px; font-weight: 700; min-width: 0; }
+.adds [data-act="edu-toggle"][aria-pressed="true"] { background: var(--wash); color: var(--orange-deep); border-color: var(--orange); }
 .card .when { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .card .sub { grid-column: 1 / -1; color: var(--muted); font-size: 13.5px; }
 .card .dots { grid-column: 1 / -1; margin-block: 6px 2px; }
@@ -1284,7 +1285,7 @@ function detailView(n) {
         ${fact("牙周", p.牙周狀況)}${fact("夜磨牙", p.夜磨牙, p.夜磨牙 === "有")}${fact("咬合力", p.咬合力, p.咬合力 === "強")}${fact("咬合", p.咬合)}
         ${p.經手醫師 && !peer ? `<div class="wide"><dt>經手醫師</dt><dd>${esc(listOf(p.經手醫師).join("、"))}</dd></div>` : ""}
       </dl>
-      ${peer ? "" : `<div class="adds">${canSurg() ? `<button class="btn sm" data-act="add-plan">＋ 術前規劃</button><button class="btn sm" data-act="add-surgery">＋ 手術</button>` : ""}${canPros() ? `<button class="btn sm" data-act="add-temp">＋ 臨時假牙</button>` : ""}<button class="btn sm" data-act="add-event">＋ 追蹤／併發症</button>${canPros() ? `<button class="btn sm" data-act="add-final">＋ 正式假牙</button>` : ""}${window.API ? `<button class="btn sm" data-act="upload" data-scope="i">＋ 上傳照片</button>` : ""}</div>`}
+      ${peer ? "" : `<div class="adds">${canSurg() ? `<button class="btn sm" data-act="add-plan">＋ 術前規劃</button><button class="btn sm" data-act="add-surgery">＋ 手術</button>` : ""}${canPros() ? `<button class="btn sm" data-act="add-temp">＋ 臨時假牙</button>` : ""}<button class="btn sm" data-act="add-event">＋ 追蹤／併發症</button>${canPros() ? `<button class="btn sm" data-act="add-final">＋ 正式假牙</button>` : ""}${window.API ? `<button class="btn sm" data-act="upload" data-scope="i">＋ 上傳照片</button>` : ""}${storyButtons(n, "i")}</div>`}
     </div>
     <section class="block"><div class="spread"><h3>總覽</h3>${canEditCase(n) ? `<button class="btn ghost sm" data-act="photos" data-key="OV">${blocksFor(n, "OV").length ? "編輯照片" : "＋ 術前術後照片"}</button>` : ""}</div>
       ${blocksFor(n, "OV").map((b, i) => blockHTML(b, "OV#" + i, false)).join("")}
@@ -1912,7 +1913,7 @@ function otherDetail(name) {
         ${fact("治療", oc.surgs.map(s => `${s.日期} ${listOf(s.類型).join("＋")}`).join("、") || "尚未治療")}${fact("最近診斷", last.診斷)}
         ${p.備註 ? `<div class="wide"><dt>備註</dt><dd>${esc(p.備註)}</dd></div>` : ""}
       </dl>
-      ${peer ? "" : `<div class="adds"><button class="btn sm" data-act="add-oplan">＋ 術前規劃</button><button class="btn sm" data-act="add-osurg">＋ 治療</button><button class="btn sm" data-act="add-oevent">＋ 追蹤／併發症</button>${ov.length ? "" : `<button class="btn sm" data-act="photos" data-key="XOV" data-name="${esc(name)}">＋ 總覽照片</button>`}</div>`}
+      ${peer ? "" : `<div class="adds"><button class="btn sm" data-act="add-oplan">＋ 術前規劃</button><button class="btn sm" data-act="add-osurg">＋ 治療</button><button class="btn sm" data-act="add-oevent">＋ 追蹤／併發症</button>${ov.length ? "" : `<button class="btn sm" data-act="photos" data-key="XOV" data-name="${esc(name)}">＋ 總覽照片</button>`}${storyButtons(name, "o")}</div>`}
     </div>
     ${ov.length ? `<section class="block"><div class="spread"><h3>總覽</h3>${peer ? "" : `<button class="btn ghost sm" data-act="photos" data-key="XOV" data-name="${esc(name)}">編輯照片</button>`}</div>
       ${ov.map((b, i) => blockHTML(b, "XOV#" + i, false)).join("")}</section>` : ""}
@@ -1960,9 +1961,35 @@ function mdRender(src, name, scope) {
 }
 function storySection(name, scope) {
   const s = storyOf(name, scope), canW = !window.API || isAdmin() || (scope === "o" ? canOther() : involved(name, USER));
-  if (!s && (!canW || (peer && !consult))) return "";
-  return `<section class="block story"><div class="spread"><h3>${s && s.標題 ? esc(s.標題) : "病例故事"}</h3>${canW ? `<button class="btn ghost sm" data-act="story-edit" data-scope="${scope}" data-name="${esc(name)}">${s ? "編輯" : "＋ 寫病例故事"}</button>` : ""}</div>
-    ${s ? `<div class="md">${mdRender(s.內容, name, scope)}</div>` : `<p class="hint">像寫網誌一樣寫下這位病人的故事，可以插入已上傳的照片、用 Markdown 排版、替文字上色。諮詢時會顯示在最上面。</p>`}</section>`;
+  if (!s || !String(s.內容 || "").trim()) return "";
+  return `<section class="block story"><div class="spread"><h3>${s.標題 ? esc(s.標題) : "病例故事"}</h3>${canW ? `<button class="btn ghost sm" data-act="story-edit" data-scope="${scope}" data-name="${esc(name)}">編輯</button>` : ""}</div>
+    <div class="md">${mdRender(s.內容, name, scope)}</div></section>`;
+}
+const hasStory = (name, scope) => { const s = storyOf(name, scope); return !!(s && String(s.內容 || "").trim()); };
+const isEdu = (name, scope) => storyOf(name, scope)?.衛教 === "是";
+function storyButtons(name, scope) {
+  return `<button class="btn sm" data-act="story-edit" data-scope="${scope}" data-name="${esc(name)}">${hasStory(name, scope) ? "編輯病例故事" : "＋ 病例故事"}</button><button class="btn sm" data-act="edu-toggle" data-scope="${scope}" data-name="${esc(name)}" aria-pressed="${isEdu(name, scope)}">${isEdu(name, scope) ? "★ 衛教案例" : "☆ 加入衛教案例"}</button>`;
+}
+function toggleEdu(name, scope) {
+  let r = storyOf(name, scope);
+  if (!r) { r = { ID: uid("ST"), 姓名: name, 範圍: scope, 標題: "", 內容: "", 建立者: USER }; DATA.stories.push(r); }
+  r.衛教 = r.衛教 === "是" ? "" : "是";
+  render(); persist([{ op: "put", type: "stories", rec: r }], r.衛教 ? "已加入衛教案例" : "已移出衛教案例");
+}
+
+/* ---------- education cases: picked cases, shown in every mode ---------- */
+function eduView() {
+  const recs = DATA.stories.filter(s => s.衛教 === "是").filter(s => (s.範圍 || "i") === "o" ? canOther() && otherNames().includes(s.姓名) : DATA.patients.some(p => p.姓名 === s.姓名) && canSee(s.姓名));
+  const catOf = s => (s.範圍 || "i") === "o" ? otypes(otherCase(s.姓名)) : [...new Set(DATA.implants.filter(i => i.姓名 === s.姓名).map(i => i.術式))].filter(x => x !== "重植");
+  const cats = [...new Set(recs.flatMap(catOf))];
+  const f = view.eduF || "全部", shown = recs.filter(s => f === "全部" || catOf(s).includes(f)).sort((a, b) => (a.更新時間 || "") < (b.更新時間 || "") ? 1 : -1);
+  return `<div class="spread"><h2 style="margin:0;font-family:var(--serif)">衛教案例</h2><span class="hint">${shown.length} 個案例</span></div>
+    ${recs.length ? `<div class="chips">${["全部"].concat(cats).map(c => `<button class="chip" data-act="edu-f" data-f="${esc(c)}" aria-pressed="${f === c}">${esc(en(c))}</button>`).join("")}</div>` : ""}
+    <div class="list cards">${shown.map(s => { const sc = s.範圍 || "i", nm = s.姓名;
+      return `<button class="card pc" data-act="${sc === "o" ? "open-other" : "open"}" data-p="${esc(nm)}" data-keep="1">${cthumbHTML(nm, sc)}<span class="cbody">
+        <span class="row1"><span class="name">${esc(sc === "o" ? oLabel(nm) : label(nm))}</span>${catOf(s).map(c => sc === "o" ? `<span class="tag tg-other">${esc(c)}</span>` : tagHTML(c)).join("")}</span>
+        ${s.標題 ? `<span class="sub" style="font-size:14.5px;color:var(--ink)">${esc(s.標題)}</span>` : ""}
+        <span class="sub">${esc(String(s.內容 || "").replace(/!\[[^\]]*\]\([^)]*\)/g, "").replace(/[#>*=\-]|\{[^}]*\}/g, "").replace(/\s+/g, " ").trim().slice(0, 70))}</span></span></button>`; }).join("") || `<p class="empty">還沒有衛教案例。在病人視窗按「☆ 加入衛教案例」就會出現在這裡。</p>`}</div>`;
 }
 let STY = null;
 function openStory(name, scope) {
@@ -2185,15 +2212,15 @@ function statsView() {
 function render() {
   $("#who").innerHTML = `<b>${esc(USER)}</b> · ${isAdmin() ? "管理者" : "醫師"}${window.API ? ` <button class="btn ghost sm" data-act="logout">登出</button>` : ""}`;
   const tab = (k, l) => `<button class="tab" role="tab" data-act="tab" data-t="${k}" aria-selected="${view.tab === k}">${l}</button>`;
-  $("#tabs").innerHTML = tab("cases", "植牙病例") + (canOther() && !peer ? tab("other", "其他治療") : "") + (isAdmin() && !peer ? tab("stats", "統計") + tab("review", "檢討") : "");
+  $("#tabs").innerHTML = tab("cases", "植牙病例") + (canOther() && !peer ? tab("other", "其他治療") : "") + tab("edu", "衛教案例") + (isAdmin() && !peer ? tab("stats", "統計") + tab("review", "檢討") : "");
   if (view.tab === "review" && (!isAdmin() || peer)) view.tab = "cases";
   if (view.tab === "other" && (!canOther() || peer)) view.tab = "cases";
   $$(".modes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === MODE));
   document.body.classList.toggle("consult", consult);
   if (view.tab === "stats" && (!isAdmin() || peer)) view.tab = "cases";
   if (view.patient && !canSee(view.patient)) view.patient = null;
-  if (view.other && (!otherNames().includes(view.other) || !canOther() || peer)) view.other = null;
-  $("#app").innerHTML = view.tab === "stats" ? statsView() : view.tab === "review" ? reviewView() : view.tab === "other" ? otherListView() : listView();
+  if (view.other && (!otherNames().includes(view.other) || !canOther())) view.other = null;
+  $("#app").innerHTML = view.tab === "stats" ? statsView() : view.tab === "review" ? reviewView() : view.tab === "edu" ? eduView() : view.tab === "other" ? otherListView() : listView();
   renderModal();
   if (window.API) window.API.afterRender($$("#app .card.pc").filter(c => !c.querySelector(".cthumb[data-src-ph]")).map(c => [c.dataset.act === "open-other" ? "o" : "i", c.dataset.p]));
   const oq = $("#oq");
@@ -2266,6 +2293,8 @@ document.addEventListener("click", e => {
     case "lib-pick": { const id = a.dataset.ph, s = view.libSel; view.libSel = s.includes(id) ? s.filter(x => x !== id) : s.concat(id); view.libOpen = true; render(); return; }
     case "lib-clear": view.libSel = []; render(); return;
     case "story-edit": openStory(a.dataset.name, a.dataset.scope); return;
+    case "edu-toggle": toggleEdu(a.dataset.name, a.dataset.scope); return;
+    case "edu-f": view.eduF = a.dataset.f; render(); return;
     case "story-save": saveStory(); return;
     case "story-del": { const r = STY.rec; DATA.stories = DATA.stories.filter(x => x !== r); STY = null; closeSheet(); render(); persist([{ op: "del", type: "stories", id: r.ID }], "已刪除病例故事"); return; }
     case "md": mdWrap(a.dataset.md); return;
@@ -2280,7 +2309,7 @@ document.addEventListener("click", e => {
     case "rv-kind": { const k = a.dataset.k; view.rv.kinds = view.rv.kinds.includes(k) ? view.rv.kinds.filter(x => x !== k) : view.rv.kinds.concat(k); render(); return; }
     case "add-other": view.other = null; openRecordForm("opatients"); return;
     case "filter": view.filter = a.dataset.f; render(); return;
-    case "open": if (view.tab === "other") view.tab = "cases"; openCase("i", a.dataset.p); return;
+    case "open": if (view.tab === "other" && !a.dataset.keep) view.tab = "cases"; openCase("i", a.dataset.p); return;
     case "back": closeCase(); return;
     case "site": { const n = +a.dataset.site; view.site = view.site === n ? null : n; const c = caseOf(view.patient); $("#chart").innerHTML = chartHTML(c); $("#site").innerHTML = sitePanel(c, view.site); return; }
     case "add-patient": view.patient = null; openRecordForm("patients"); return;
