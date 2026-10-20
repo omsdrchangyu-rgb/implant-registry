@@ -3,7 +3,7 @@
   "short_name": "植牙病例",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#F5F6F8",
+  "background_color": "#FFFFFF",
   "theme_color": "#3A4B54",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
